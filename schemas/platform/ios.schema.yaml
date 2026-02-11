@@ -132,6 +132,18 @@ accessibility:
       type: array
       required: false
       description: "VoiceOver rotor custom actions"
+    children_behavior:
+      type: enum
+      required: false
+      values: [combine, contain, ignore]
+      description: "Maps to .accessibilityElement(children:) — controls VoiceOver child exposure"
+    live_announcement:
+      type: map
+      required: false
+      description: "Maps base-layer semantics.live to UIAccessibility.post(.announcement)"
+      fields:
+        trigger: { type: string, required: true, description: "State change that triggers announcement" }
+        message: { type: string, required: true, description: "Property source for announcement text" }
 
 # ─────────────────────────────────────────────
 # SECTION 5: Visual (ViewModifiers)
@@ -298,6 +310,11 @@ animation:
       type: map
       required: false
       description: "Haptic feedback per interaction"
+    reduce_motion:
+      type: boolean
+      required: false
+      default: true
+      description: "Respects @Environment(\\.accessibilityReduceMotion)"
 
 # ─────────────────────────────────────────────
 # SECTION 12: Platform Constraints

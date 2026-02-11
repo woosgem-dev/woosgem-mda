@@ -74,6 +74,16 @@ accessibility:
           required: false
           default: false
           description: "Modifier.semantics(mergeDescendants = true) — merge child semantics for TalkBack"
+        live_region:
+          type: enum
+          required: false
+          values: [polite, assertive, off]
+          description: "Maps base-layer semantics.live to Modifier.semantics { liveRegion = LiveRegionMode.X }"
+        clear_and_set_semantics:
+          type: boolean
+          required: false
+          default: false
+          description: "Uses Modifier.clearAndSetSemantics {} for decorative elements"
     talkback:
       type: map
       required: false
@@ -285,6 +295,11 @@ animation:
         fields:
           spec: { type: string, description: "Animation spec (tween, spring, etc.)" }
           properties: { type: "string[]", description: "Animated properties" }
+    reduce_motion:
+      type: boolean
+      required: false
+      default: true
+      description: "Respects Android 'Remove animations' accessibility setting"
 
 # ─────────────────────────────────────────────
 # SECTION 12: Testing

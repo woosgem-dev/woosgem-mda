@@ -85,6 +85,16 @@ accessibility:
       type: array
       required: false
       description: "Custom accessibility actions"
+    accessibilityLiveRegion:
+      type: enum
+      required: false
+      values: [none, polite, assertive]
+      description: "Maps base-layer semantics.live — announces dynamic content changes (Android)"
+    importantForAccessibility:
+      type: enum
+      required: false
+      values: [auto, yes, no, no-hide-descendants]
+      description: "Controls element exposure to accessibility tree"
 
 # ─────────────────────────────────────────────
 # SECTION 3: Styling (StyleSheet)
@@ -159,6 +169,11 @@ animation:
       required: false
     entering: { type: string, required: false, description: "Enter animation" }
     exiting: { type: string, required: false, description: "Exit animation" }
+    reduce_motion:
+      type: boolean
+      required: false
+      default: true
+      description: "Respects AccessibilityInfo.isReduceMotionEnabled()"
 
 # ─────────────────────────────────────────────
 # SECTION 6: Gestures

@@ -57,12 +57,10 @@ conventions_definition:
     unit_mapping:
       type: map
       required: true
-      description: "How abstract token types map to platform-specific units"
+      description: "How abstract values map to platform units. Keys are platform identifiers."
       value_schema:
-        fields:
-          web: { type: string, required: true }
-          android: { type: string, required: true }
-          ios: { type: string, required: true }
+        type: string
+        description: "Platform unit (e.g., rem, dp, pt)"
     mode_invariance:
       type: string
       required: false
@@ -102,29 +100,13 @@ token_scale_definition:
     output_patterns:
       type: map
       required: true
-      description: "Platform-specific output name templates"
-      fields:
-        css:
-          type: string
-          required: true
-          format: "pattern with {key} placeholder"
-          example: "--wg-spacing-{key}"
-        scss:
-          type: string
-          required: false
-          format: "pattern with {key} placeholder"
-        android:
-          type: string
-          required: false
-          format: "pattern with {key} placeholder"
-        ios:
-          type: string
-          required: false
-          format: "pattern with {key} placeholder"
-        compose:
-          type: string
-          required: false
-          format: "pattern with {key} placeholder"
+      description: "Platform-specific output name templates. Keys are platform identifiers (e.g., css, scss, android, ios, compose). At least one pattern required."
+      value_schema:
+        type: string
+        format: "pattern with {key} placeholder"
+      constraints:
+        - At least one entry required
+        - Each pattern must contain {key} placeholder
     platform_mapping:
       type: map
       required: false
@@ -136,7 +118,7 @@ token_scale_definition:
 
   validation:
     - Scale must have 2+ entries
-    - output_patterns.css must contain {key}
+    - output_patterns must have at least one entry containing {key}
     - All values must be parseable (no natural language)
     - Values must be unitless numbers, arrays, or structured objects
 
@@ -166,11 +148,9 @@ semantic_token_definition:
       type: map
       required: true
       description: "Platform-specific output name templates"
-      fields:
-        css: { type: string, required: true, format: "pattern with {token} and {property} placeholders" }
-        scss: { type: string, required: false }
-        android: { type: string, required: false }
-        ios: { type: string, required: false }
+      value_schema:
+        type: string
+        format: "pattern with {token} and {property} placeholders"
     output_properties:
       type: "string[]"
       required: false
@@ -232,7 +212,7 @@ validation_checklist:
   errors:
     - Module header present with all required fields
     - Token scales have 2+ entries with parseable values
-    - Token scales have output_patterns with at least css containing {key}
+    - Token scales have output_patterns with at least one entry containing {key}
     - Token values are unitless numbers, arrays, or structured objects (no CSS unit strings)
     - Semantic token property references point to valid scale keys
     - All text in English

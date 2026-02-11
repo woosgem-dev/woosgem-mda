@@ -62,6 +62,11 @@ compatibility:
       required: false
       default: true
       description: "Handles double-invoke of effects in StrictMode"
+    min_react_version:
+      type: string
+      required: false
+      description: "Minimum React version if using version-specific features (use(), actions, ref-as-prop)"
+      example: "19"
 
 # ─────────────────────────────────────────────
 # SECTION 3: Props Interface
@@ -155,6 +160,12 @@ ref:
           example:
             focus: "void"
             scrollTo: "(position: number) => void"
+    forwarding_strategy:
+      type: enum
+      required: false
+      values: [forwardRef, prop]
+      default: prop
+      description: "prop = ref as regular prop (React 19+), forwardRef = legacy React.forwardRef wrapper"
 
 # ─────────────────────────────────────────────
 # SECTION 6: Hooks
@@ -216,6 +227,31 @@ hooks:
           name: { type: string, required: true, description: "Hook name (must start with 'use')" }
           source: { type: string, required: false, description: "Import path" }
           purpose: { type: string, required: false }
+    use:
+      type: array
+      required: false
+      description: "use() hook — reads context or promises in render (React 19+)"
+      item_schema:
+        fields:
+          source: { type: string, required: true, description: "Context or Promise being read" }
+          type: { type: string, required: true }
+    transitions:
+      type: array
+      required: false
+      description: "useTransition / useDeferredValue hooks for concurrent features"
+      item_schema:
+        fields:
+          type: { type: enum, values: [transition, deferredValue], required: true }
+          name: { type: string, required: true }
+          purpose: { type: string, required: false }
+    action_hooks:
+      type: array
+      required: false
+      description: "useActionState / useFormStatus — React 19 server action hooks"
+      item_schema:
+        fields:
+          type: { type: enum, values: [actionState, formStatus], required: true }
+          purpose: { type: string, required: true }
 
 # ─────────────────────────────────────────────
 # SECTION 7: Form Control

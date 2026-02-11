@@ -163,7 +163,31 @@ access_modifiers:
   description: "TypeScript class member visibility"
 
 # ─────────────────────────────────────────────
-# SECTION 8: Naming Conventions
+# SECTION 8: Async / Concurrency
+# ─────────────────────────────────────────────
+
+async:
+  description: "TypeScript async patterns"
+  fields:
+    async_function:
+      type: boolean
+      required: false
+      description: "async function returning Promise<T>"
+    promise_type:
+      type: string
+      required: false
+      description: "Promise return type (e.g., Promise<string>)"
+    async_iterable:
+      type: boolean
+      required: false
+      description: "AsyncIterable<T> or AsyncGenerator"
+    awaitable:
+      type: boolean
+      required: false
+      description: "Function is designed to be awaited"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Naming Conventions
 # ─────────────────────────────────────────────
 
 naming:
@@ -176,7 +200,7 @@ naming:
   file_extension: ".ts"
 
 # ─────────────────────────────────────────────
-# SECTION 9: Validation
+# SECTION 10: Validation
 # ─────────────────────────────────────────────
 
 validation:

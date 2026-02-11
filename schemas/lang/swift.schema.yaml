@@ -32,7 +32,7 @@ function_signature:
       type: enum
       required: false
       values: [public, internal, private, fileprivate, open]
-      default: public
+      default: internal
 
 # ─────────────────────────────────────────────
 # SECTION 2: Type Definitions
@@ -114,7 +114,9 @@ optionals:
       type: string
       const: "T!"
     optional_binding:
-      description: "if let / guard let patterns"
+      type: string
+      const: "if let / guard let"
+      description: "Pattern matching for optional unwrapping"
     nil_coalescing:
       type: string
       const: "??"
@@ -156,7 +158,7 @@ access_control:
 # ─────────────────────────────────────────────
 
 result_builders:
-  description: "Swift result builder pattern (@resultBuilder)"
+  description: "Swift result builder pattern (@resultBuilder) — a language-level DSL mechanism. Specific builder types (e.g., @ViewBuilder) belong in the platform layer (ios.schema.yaml)."
   fields:
     name:
       type: string

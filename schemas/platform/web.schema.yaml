@@ -68,6 +68,14 @@ accessibility:
         focus_when_disabled: { type: boolean, required: false, default: false }
         focus_ring: { type: enum, values: [default, custom, none], default: default }
         trap: { type: boolean, required: false, description: "Focus trap for modals/dialogs" }
+    live_region:
+      type: map
+      required: false
+      description: "Maps base-layer semantics.live to ARIA live region attributes"
+      fields:
+        aria_live: { type: enum, values: [polite, assertive, off], required: true }
+        aria_atomic: { type: boolean, required: false, default: false }
+        aria_relevant: { type: string, required: false, description: "additions, removals, text, all" }
 
 # ─────────────────────────────────────────────
 # SECTION 3: Visual Mapping (CSS Hooks)

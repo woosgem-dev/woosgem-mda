@@ -399,7 +399,33 @@ ssr:
       default: eager
 
 # ─────────────────────────────────────────────
-# SECTION 13: Testing
+# SECTION 13: Framework Interop
+# ─────────────────────────────────────────────
+
+interop:
+  required: false
+  description: "Cross-framework wrapper generation (e.g., @lit/react for React consumption)"
+  fields:
+    react:
+      type: map
+      required: false
+      description: "@lit/react createComponent wrapper for React interop"
+      fields:
+        events:
+          type: map
+          required: false
+          description: "CustomEvent → React callback prop mapping"
+          value_schema:
+            fields:
+              react_prop: { type: string, required: true, description: "React event handler prop name" }
+              event_name: { type: string, required: true, description: "CustomEvent name to map" }
+        react_name:
+          type: string
+          required: false
+          description: "React component name (PascalCase wrapper)"
+
+# ─────────────────────────────────────────────
+# SECTION 14: Testing
 # ─────────────────────────────────────────────
 
 testing:
@@ -428,7 +454,7 @@ testing:
         - "el.querySelector('button')  # Light DOM"
 
 # ─────────────────────────────────────────────
-# SECTION 14: Validation
+# SECTION 15: Validation
 # ─────────────────────────────────────────────
 
 validation:
@@ -449,3 +475,4 @@ validation:
     - Custom events should use consistent naming convention
     - Consider Declarative Shadow DOM for SSR compatibility
     - Await updateComplete in tests before assertions
+    - Multi-framework design systems should define interop.react for React consumption
