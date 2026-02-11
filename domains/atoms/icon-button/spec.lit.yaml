@@ -1,0 +1,27 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-icon-button
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  variant: { name: variant, type: "{ type: String }" }
+  color: { name: color, type: "{ type: String }" }
+  size: { name: size, type: "{ type: String }" }
+  shape: { name: shape, type: "{ type: String }" }
+  disabled: { name: disabled, type: "{ type: Boolean }" }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping:
+  activate: click
+
+implementation:
+  strategy: factory
+  factory: "createComponent(IconButtonCore, 'wg-icon-button', { props: {...} })"
+  registration: "customElements.define('wg-icon-button', IconButton)"
+  internal_deps: [createComponent]

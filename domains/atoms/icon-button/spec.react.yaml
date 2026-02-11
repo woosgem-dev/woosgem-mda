@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLButtonElement
+
+props_mapping:
+  variant: { name: variant, type: IconButtonVariant }
+  color: { name: color, type: IconButtonColor }
+  size: { name: size, type: IconButtonSize }
+  shape: { name: shape, type: IconButtonShape }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'button'>, keyof IconButtonStyleProps | 'data-variant' | 'data-color' | 'data-size' | 'data-shape'>"
+
+content_mapping:
+  default: children
+
+event_mapping:
+  activate: onClick
+
+implementation:
+  strategy: factory
+  factory: "createComponent(IconButtonDef)"
+  internal_deps: [createComponent]

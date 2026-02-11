@@ -1,28 +1,31 @@
 component:
   name: Kbd
   category: atom
-  description: 키보드 키 표시. 단축키나 키 조합을 시각적으로 나타내는 인라인 요소
+  complexity: simple
+  description: Keyboard key display for showing shortcuts or key combinations as inline styled elements
 
 semantics:
   tag: kbd
-  role: none
+  role: implicit
 
 attributes:
   size:
     type: enum
     values: [sm, md, lg]
     default: sm
-    description: 키보드 키 표시 크기
+    description: Key display size
   variant:
     type: enum
     values: [raised, flat, outline]
     default: raised
-    description: "시각적 스타일 (raised: 입체감 있는 키, flat: 평면, outline: 외곽선)"
+    description: "Visual style (raised: 3D key cap, flat: minimal, outline: bordered)"
 
 content:
   default:
-    description: 키 이름 텍스트 (Ctrl, Shift, Enter 등)
+    description: Key name text (Ctrl, Shift, Enter, etc.)
     required: true
+    type: text
+    cardinality: single
 
 states: {}
 
@@ -31,10 +34,14 @@ interactions: {}
 accessibility:
   aria: {}
   keyboard: {}
-  focus: 포커스 불가 (정보 표시 전용). kbd 시맨틱 태그가 키보드 입력 의미를 전달
+  focus: "Not focusable (informational display element). Semantic kbd tag conveys keyboard input meaning"
 
 visual_mapping:
   class: kbd
   data_attributes:
-    data-size: size
-    data-variant: variant
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-variant:
+      strategy: value-mapped
+      source: variant

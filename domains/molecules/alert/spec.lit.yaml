@@ -1,0 +1,25 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-alert
+  shadow_dom: false
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: subtle }
+  status: { attribute: status, type: String, default: info }
+  closable: { attribute: closable, type: Boolean, default: false }
+
+content_mapping:
+  icon: '<slot name="icon">'
+  default: "<slot>"
+  action: '<slot name="action">'
+
+event_mapping:
+  close: "wg-close (CustomEvent)"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(AlertCore, 'wg-alert', { props })"
+  registration: "customElements.define('wg-alert', Alert)"

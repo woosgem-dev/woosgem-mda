@@ -1,0 +1,51 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-toast
+  shadow_dom: false  # Light DOM via createRenderRoot override
+
+props_mapping:
+  variant: { attribute: variant, type: String, reflect: true, default: "'info'" }
+  position: { attribute: position, type: String, reflect: true, default: "'top-right'" }
+  duration: { attribute: duration, type: Number, reflect: true, default: 5000 }
+  closable: { attribute: closable, type: Boolean, reflect: true, default: true }
+  visible: { attribute: visible, type: Boolean, reflect: true, default: true }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping:
+  close: "CustomEvent('close')"
+
+composition_mapping:
+  rendering: inline
+
+implementation:
+  strategy: manual
+  factory_usage: partial  # Factory creates base, but ToastElement extends LitElement manually
+  behaviors:
+    auto-dismiss:
+      pattern: "connectedCallback + updated"
+      on: "visible=true && duration > 0"
+      setup: "setTimeout(handleClose, duration) in startTimer()"
+      cleanup: "clearTimeout in clearTimer(), also on disconnectedCallback"
+    timer-restart:
+      pattern: "updated lifecycle"
+      details: "Restarts timer when visible or duration properties change"
+    conditional-render:
+      pattern: "return null in render when visible=false"
+    core-attr-sync:
+      pattern: "applyAttrsToElement in updated and connectedCallback"
+  lifecycle: [connectedCallback, disconnectedCallback, updated, createRenderRoot]
+  internal_deps: [createComponent, applyAttrsToElement, emitEvent]
+
+custom_elements:
+  - { tag: wg-toast, class: ToastElement }
+
+notes: |
+  Two classes exist in the implementation:
+  1. Toast — factory-generated base (not registered)
+  2. ToastElement — manual LitElement extension with auto-dismiss timer logic (registered as wg-toast)
+  The ToastElement class is the one actually registered with customElements.define.

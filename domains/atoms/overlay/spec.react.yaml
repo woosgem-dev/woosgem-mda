@@ -1,0 +1,24 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+
+props_mapping:
+  blur: { name: blur, type: boolean }
+  opacity: { name: opacity, type: OverlayOpacity }
+  level: { name: level, type: OverlayLevel }
+  visible: { name: visible, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof OverlayStyleProps | 'data-blur' | 'data-opacity' | 'data-level' | 'data-visible' | 'aria-hidden'>"
+
+content_mapping: {}
+
+event_mapping:
+  dismiss: onClick
+
+implementation:
+  strategy: factory
+  factory: "createComponent(OverlayDef, {})"
+  internal_deps: [createComponent]

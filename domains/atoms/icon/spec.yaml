@@ -1,7 +1,8 @@
 component:
   name: Icon
   category: atom
-  description: SVG 아이콘 래퍼. 다양한 크기와 색상으로 아이콘을 표시하는 장식적 요소
+  complexity: simple
+  description: SVG icon wrapper displaying icons with consistent sizing and color theming
 
 semantics:
   tag: span
@@ -12,17 +13,19 @@ attributes:
     type: enum
     values: [xs, sm, md, lg, xl]
     default: md
-    description: "아이콘 크기 (xs: 12px, sm: 16px, md: 20px, lg: 24px, xl: 32px)"
+    description: "Icon dimensions (xs:12px, sm:16px, md:20px, lg:24px, xl:32px)"
   color:
     type: enum
     values: [inherit, primary, secondary, danger, success, warning, info, muted]
     default: inherit
-    description: 아이콘 색상. inherit은 부모의 currentColor를 따름
+    description: Icon color. Inherit uses parent currentColor
 
 content:
   default:
-    description: SVG 아이콘 데이터. 인라인 SVG 또는 아이콘 컴포넌트
+    description: SVG icon data (inline SVG element or icon component)
     required: true
+    type: node
+    cardinality: single
 
 states: {}
 
@@ -30,15 +33,19 @@ interactions: {}
 
 accessibility:
   aria:
-    hidden: "항상 true. 장식적 요소이므로 스크린 리더에서 숨김"
+    hidden: "Always true. Decorative element hidden from screen readers"
   keyboard: {}
-  focus: 포커스 불가 (장식적 요소)
+  focus: "Not focusable (decorative element)"
 
 visual_mapping:
   class: icon
   data_attributes:
-    data-size: size
-    data-color: color
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-color:
+      strategy: value-mapped
+      source: color
 
 size_map:
   xs: 12

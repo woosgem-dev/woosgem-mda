@@ -1,0 +1,23 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLHRElement
+
+props_mapping:
+  orientation: { name: orientation, type: DividerOrientation }
+  variant: { name: variant, type: DividerVariant }
+  spacing: { name: spacing, type: DividerSpacing }
+  color: { name: color, type: DividerColor }
+  native: "Omit<ComponentPropsWithoutRef<'hr'>, keyof DividerStyleProps | 'data-orientation' | 'data-variant' | 'data-spacing' | 'role' | 'aria-orientation'>"
+
+content_mapping: {}
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(DividerDef)"
+  internal_deps: [createComponent]

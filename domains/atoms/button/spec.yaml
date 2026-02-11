@@ -1,76 +1,102 @@
 component:
   name: Button
   category: atom
-  description: 기본 인터랙션 버튼. 다양한 시각적 변형과 상태를 지원하는 범용 액션 요소
+  complexity: simple
+  description: Primary interaction button with multiple visual variants, color themes, and states
 
 semantics:
   tag: button
-  role: button
+  role: implicit
 
 attributes:
   variant:
     type: enum
     values: [filled, outline, ghost, link]
     default: filled
-    description: 시각적 스타일 변형
+    description: Visual style variant
   color:
     type: enum
     values: [primary, secondary, danger, success, warning, info]
     default: primary
-    description: 색상 테마
+    description: Color theme
   size:
     type: enum
     values: [xs, sm, md, lg]
     default: md
-    description: 버튼 크기
+    description: Button size
   loading:
     type: boolean
     default: false
-    description: 로딩 상태 표시. true이면 스피너를 표시하고 클릭을 비활성화
+    description: Loading state indicator. Displays spinner and disables interaction when true
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태. true이면 클릭 불가
+    description: Disabled state. Prevents interaction when true
   full-width:
     type: boolean
     default: false
-    description: 부모 컨테이너 너비를 100% 채움
+    description: Stretches button to fill parent container width (100%)
 
 content:
   default:
-    description: 버튼 텍스트 또는 아이콘 등 내부 콘텐츠
+    description: Button label text, icon, or mixed content
     required: true
+    type: node
+    cardinality: single
 
 states:
   loading:
-    visual: 스피너 표시, 내부 콘텐츠 반투명 처리
-    behavior: 클릭 무시, disabled 속성 자동 적용
+    visual: Spinner displayed inside button, inner content rendered semi-transparent
+    behavior: Click events ignored, native disabled attribute applied automatically
     aria: { busy: true, disabled: true }
   disabled:
-    visual: 흐리게(opacity 감소) 표시
-    behavior: 클릭 무시, 포커스 가능
+    visual: Reduced opacity appearance
+    behavior: Click events ignored, element remains focusable
     aria: { disabled: true }
 
 interactions:
   activate:
     triggers: [click, Enter, Space]
-    condition: loading=false AND disabled=false
-    description: 버튼 활성화 액션 실행
+    condition:
+      all:
+        - { attr: loading, eq: false }
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload:
+      event: MouseEvent
+    description: Fires the activation action
 
 accessibility:
   aria:
-    busy: "loading 상태일 때 true"
-    disabled: "disabled 또는 loading 상태일 때 true (native disabled 속성으로 처리)"
+    busy: "Set to true when loading state is active"
+    disabled: "Handled via native disabled attribute when disabled or loading"
   keyboard:
     Enter: activate
     Space: activate
-  focus: 기본 포커스 링 표시. disabled 시에도 포커스 가능
+  focus: "Default focus ring displayed. Remains focusable when disabled"
 
 visual_mapping:
   class: btn
   data_attributes:
-    data-variant: variant
-    data-color: color
-    data-size: size
-    data-state: "loading > disabled > undefined (우선순위: loading이 disabled보다 우선)"
-    data-full-width: "full-width=true일 때만 존재"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-color:
+      strategy: value-mapped
+      source: color
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { attr: loading, eq: true }, value: loading }
+        - { when: { attr: disabled, eq: true }, value: disabled }
+      fallback: absent
+    data-full-width:
+      strategy: present-when-true
+      source: full-width
+
+composition:
+  dependencies:
+    atoms: [Spinner]

@@ -1,0 +1,23 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-icon
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  size: { name: size, type: "{ type: String }" }
+  color: { name: color, type: "{ type: String }" }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(IconCore, 'wg-icon', { props: {...} })"
+  registration: "customElements.define('wg-icon', Icon)"
+  internal_deps: [createComponent]

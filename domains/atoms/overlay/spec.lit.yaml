@@ -1,0 +1,25 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-overlay
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  blur: { name: blur, type: "{ type: Boolean }" }
+  opacity: { name: opacity, type: "{ type: String }" }
+  level: { name: level, type: "{ type: String }" }
+  visible: { name: visible, type: "{ type: Boolean }" }
+
+content_mapping: {}
+
+event_mapping:
+  dismiss: click
+
+implementation:
+  strategy: factory
+  factory: "createComponent(OverlayCore, 'wg-overlay', { props: {...} })"
+  registration: "customElements.define('wg-overlay', Overlay)"
+  internal_deps: [createComponent]

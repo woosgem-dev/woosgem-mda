@@ -1,0 +1,67 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+  pattern: flat  # Toast is a single component; ToastContainer and useToast are utilities
+
+props_mapping:
+  variant: { name: variant, type: ToastVariant }
+  position: { name: position, type: ToastPosition }
+  duration: { name: duration, type: number }
+  closable: { name: closable, type: boolean }
+  visible: { name: visible, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ToastStyleProps | 'data-variant' | 'data-position' | 'data-closable' | 'data-visible' | 'role' | 'aria-live' | 'aria-atomic'>"
+  additional:
+    onClose: { type: "() => void", description: "Callback when toast is dismissed (auto or manual)" }
+
+content_mapping:
+  default: children
+
+event_mapping:
+  close: onClose
+
+composition_mapping:
+  rendering: inline  # Toast is rendered by ToastContainer which manages portal
+
+implementation:
+  strategy: manual
+  factory_usage: partial  # BaseToast uses createComponent; root Toast is manual forwardRef
+  behaviors:
+    auto-dismiss:
+      pattern: effect
+      on: "visible=true && duration > 0"
+      setup: "setTimeout(handleClose, duration)"
+      cleanup: "clearTimeout(timerRef)"
+    conditional-render:
+      pattern: "return null when visible=false"
+  hooks: [forwardRef, useEffect, useRef, useCallback, useState]
+  internal_deps: [createComponent]
+
+utilities:
+  ToastContainer:
+    description: Manages rendering of multiple Toast instances grouped by position.
+    ref: HTMLDivElement
+    props:
+      toasts: { type: "ToastItem[]", required: true }
+      onDismiss: { type: "(id: string) => void", required: true }
+      position: { type: ToastPosition, default: "'top-right'" }
+    implementation:
+      strategy: manual
+      details: "Groups toasts by position, renders each group in a container div with data-position"
+
+  useToast:
+    description: Hook for managing toast notification state.
+    options:
+      defaultDuration: { type: number, default: 5000 }
+      maxToasts: { type: number, default: 5 }
+      defaultPosition: { type: ToastPosition, default: "'top-right'" }
+    returns:
+      toasts: "ToastItem[]"
+      addToast: "(content: ReactNode, options?: Partial<ToastItem>) => string"
+      removeToast: "(id: string) => void"
+      clearAll: "() => void"
+    implementation:
+      hooks: [useState, useCallback]

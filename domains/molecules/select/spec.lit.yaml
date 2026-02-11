@@ -1,0 +1,42 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-select
+  shadow_dom: false
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: outline }
+  size: { attribute: size, type: String, default: md }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+  error: { attribute: error, type: Boolean, default: false }
+  open: { attribute: open, type: Boolean, default: false }
+  multiple: { attribute: multiple, type: Boolean, default: false }
+
+content_mapping:
+  value: '<slot name="value">'
+  placeholder: '<slot name="placeholder">'
+  icon: '<slot name="icon">'
+
+event_mapping:
+  toggle: "click"
+  select-option: "wg-change (CustomEvent)"
+  close: "wg-close (CustomEvent)"
+
+composition_mapping:
+  SelectMenu:
+    tag_name: wg-select-menu
+    registration: "customElements.define('wg-select-menu', SelectMenu)"
+  SelectOption:
+    tag_name: wg-select-option
+    registration: "customElements.define('wg-select-option', SelectOption)"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SelectCore, 'wg-select', { props, events })"
+  registration: "customElements.define('wg-select', Select)"
+  behaviors:
+    disabled-click-guard:
+      pattern: callback
+      description: "Prevents click propagation when disabled=true"

@@ -1,0 +1,37 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "defineComponent (Options API with render function)"
+
+props_mapping:
+  content: { name: content, type: String, default: "" }
+  position: { name: position, type: "String as PropType<TooltipPosition>", default: top }
+  trigger: { name: trigger, type: "String as PropType<TooltipTrigger>", default: hover }
+  delay: { name: delay, type: Number, default: 0 }
+  arrow: { name: arrow, type: Boolean, default: true }
+  visible: { name: visible, type: Boolean, default: ~ }
+  disabled: { name: disabled, type: Boolean, default: false }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  show: "@update:visible (true)"
+  hide: "@update:visible (false)"
+
+implementation:
+  strategy: manual
+  pattern: "Options API (data/methods/computed/render)"
+  behaviors:
+    controlled-visible:
+      pattern: effect
+      description: "Supports v-model:visible for two-way binding"
+    trigger-handlers:
+      pattern: callback
+      description: "Render function dynamically applies event handlers based on trigger prop"
+    delay-timeout:
+      pattern: ref
+      description: "data().timeoutId manages show delay with beforeUnmount cleanup"

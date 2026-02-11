@@ -1,0 +1,22 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<DividerProps>"
+
+props_mapping:
+  orientation: { name: orientation, type: "String as PropType<DividerOrientation>" }
+  variant: { name: variant, type: "String as PropType<DividerVariant>" }
+  spacing: { name: spacing, type: "String as PropType<DividerSpacing>" }
+  color: { name: color, type: "String as PropType<DividerColor>" }
+
+content_mapping: {}
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(DividerDef)"
+  internal_deps: [createComponent]

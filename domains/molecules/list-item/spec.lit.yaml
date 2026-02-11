@@ -1,0 +1,29 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-list-item
+  shadow_dom: false
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: default }
+  selected: { attribute: selected, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+  divider: { attribute: divider, type: Boolean, default: false }
+
+content_mapping:
+  default: "<slot>"
+
+event_mapping:
+  select: "click"
+  hover: "mouseenter"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(ListItemCore, 'wg-list-item', { props, events })"
+  registration: "customElements.define('wg-list-item', ListItem)"
+  behaviors:
+    disabled-click-guard:
+      pattern: callback
+      description: "Prevents click propagation when disabled=true"

@@ -1,0 +1,379 @@
+# spec.schema.yaml
+# Meta-schema that defines the structure all spec.yaml files must conform to.
+# This is the "spec of specs" — the single source of truth for spec validation.
+
+schema:
+  version: 1.0.0
+  description: Defines the structure and constraints for component spec.yaml files
+
+# ─────────────────────────────────────────────
+# SECTION 1: Required Top-Level Sections
+# ─────────────────────────────────────────────
+
+sections:
+  component:
+    required: true
+    fields:
+      name: { type: string, required: true, format: PascalCase }
+      category: { type: enum, required: true, values: [atom, molecule, organism] }
+      description: { type: string, required: true, language: english }
+      complexity:
+        type: enum
+        required: true
+        values: [simple, composite, behavioral]
+        description: |
+          simple — createComponent factory is sufficient (Button, Badge, Avatar, Divider, Kbd)
+          composite — sub-components but minimal behavior logic (Card, Checkbox)
+          behavioral — complex state machine / side effects required (Modal, Select, Toast, Tooltip, Tab)
+      version: { type: string, required: false, format: semver, description: "Component-level version for change tracking" }
+
+  semantics:
+    required: true
+    fields:
+      tag: { type: string, required: true, description: "HTML element tag" }
+      role:
+        type: string
+        required: true
+        description: "ARIA role. Use 'implicit' if the tag already implies the role (e.g., button)"
+      role_conditional:
+        type: map
+        required: false
+        description: "Conditional role based on attribute value. Key=attribute condition, Value=role"
+        example: { "clickable=true": button }
+
+  attributes:
+    required: true
+    description: "Component configuration. Empty {} is valid for components with no configurable attributes."
+
+  content:
+    required: true
+    description: "Content areas (slots/children). Empty {} is valid for components with no content."
+
+  states:
+    required: true
+    description: "Component states. Empty {} is valid for stateless components."
+
+  interactions:
+    required: true
+    description: "User interactions. Empty {} is valid for non-interactive components."
+
+  accessibility:
+    required: true
+
+  visual_mapping:
+    required: true
+
+  # Optional sections
+  composition:
+    required: false
+    description: "Only for compound components with sub-components or external dependencies"
+
+  control:
+    required: false
+    description: "Only for form components (Input, Select, Checkbox, Radio, Switch, Textarea)"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Type Algebra
+# ─────────────────────────────────────────────
+
+type_algebra:
+  description: "Closed set of allowed types for attributes"
+
+  primitives:
+    boolean:
+      description: "true or false"
+      default_allowed: true
+    string:
+      description: "Any string value"
+      default_allowed: true
+      optional_constraints:
+        pattern: "Regex pattern"
+        format: "Named format (e.g., hex-color, css-length)"
+    number:
+      description: "Numeric value"
+      default_allowed: true
+      optional_constraints:
+        min: "Minimum value"
+        max: "Maximum value"
+        step: "Step increment"
+
+  constrained:
+    enum:
+      description: "One of a fixed set of string values"
+      requires: [values]
+      default_allowed: true
+      example:
+        type: enum
+        values: [filled, outline, ghost, link]
+        default: filled
+
+  compound:
+    union:
+      description: "Multiple types accepted"
+      requires: [types]
+      example:
+        type: union
+        types: [string, number]
+        description: "Number is treated as px, string as raw CSS value"
+        default: null
+
+  special:
+    callback:
+      description: "Event handler function"
+      requires: [signature]
+      example:
+        type: callback
+        signature: "(value: string) => void"
+
+  null_and_undefined:
+    description: "Use YAML null (~) for absent defaults. Never use the string 'undefined'."
+    example:
+      default: ~  # correct
+      # default: undefined  # WRONG — this is a string
+
+# ─────────────────────────────────────────────
+# SECTION 3: Attribute Definition
+# ─────────────────────────────────────────────
+
+attribute_definition:
+  fields:
+    type: { required: true, values: [enum, boolean, string, number, union] }
+    values: { required: "when type=enum" }
+    types: { required: "when type=union" }
+    default: { required: true, description: "Use ~ (null) if no default" }
+    description: { required: true, language: english }
+    min: { required: false, applicable: "type=number" }
+    max: { required: false, applicable: "type=number" }
+
+# ─────────────────────────────────────────────
+# SECTION 4: Content Area Definition
+# ─────────────────────────────────────────────
+
+content_definition:
+  fields:
+    description: { required: true, language: english }
+    required: { required: true, type: boolean }
+    type:
+      required: true
+      values: [text, node, component-list]
+      description: |
+        text — plain text only
+        node — any renderable content (text, elements, components)
+        component-list — specific component types only (e.g., Tab items)
+    cardinality:
+      required: false
+      values: [single, multiple]
+      default: single
+    accepts:
+      required: false
+      description: "List of accepted component names when type=component-list"
+
+# ─────────────────────────────────────────────
+# SECTION 5: State Definition
+# ─────────────────────────────────────────────
+
+state_definition:
+  fields:
+    visual: { required: true, type: string, language: english }
+    behavior: { required: true, type: string, language: english }
+    aria: { required: true, type: map }
+
+# ─────────────────────────────────────────────
+# SECTION 6: Interaction Definition
+# ─────────────────────────────────────────────
+
+interaction_definition:
+  fields:
+    triggers: { required: true, type: "string[]" }
+    condition:
+      required: true
+      type: structured
+      description: "Machine-parseable condition, not natural language"
+      syntax:
+        all: "All conditions must be true (AND)"
+        any: "At least one must be true (OR)"
+        not: "Negation"
+      example:
+        condition:
+          all:
+            - { attr: loading, eq: false }
+            - { attr: disabled, eq: false }
+    effect:
+      required: true
+      type: enum
+      values: [emit, toggle, set]
+      description: |
+        emit — fires an external event/callback
+        toggle(field) — toggles an internal boolean attribute
+        set(field, value) — sets an internal attribute to a value
+    payload:
+      required: "when effect=emit"
+      type: map
+      description: "Data emitted with the event"
+      example:
+        payload:
+          value: string
+          index: number
+    description: { required: true, language: english }
+
+# ─────────────────────────────────────────────
+# SECTION 7: Visual Mapping
+# ─────────────────────────────────────────────
+
+visual_mapping_definition:
+  fields:
+    class: { required: true, type: string, description: "CSS class name" }
+    data_attributes:
+      required: true
+      type: map
+      value_schema:
+        description: "Each data attribute must use one of three strategies"
+        strategies:
+          value-mapped:
+            description: "Attribute always present, value equals the source attribute"
+            example:
+              data-variant:
+                strategy: value-mapped
+                source: variant
+          present-when-true:
+            description: "Attribute exists only when condition is true, no value"
+            css_selector: "[data-full-width]"
+            example:
+              data-full-width:
+                strategy: present-when-true
+                source: full-width
+          priority-enum:
+            description: "Multiple states compete; highest priority wins"
+            example:
+              data-state:
+                strategy: priority-enum
+                priority:
+                  - { when: { attr: loading, eq: true }, value: loading }
+                  - { when: { attr: disabled, eq: true }, value: disabled }
+                fallback: absent  # absent = attribute not rendered
+
+# ─────────────────────────────────────────────
+# SECTION 8: Composition (Compound Components)
+# ─────────────────────────────────────────────
+
+composition_definition:
+  description: "For components with sub-components. Use ONE canonical pattern."
+
+  fields:
+    layout:
+      required: true
+      type: "string[]"
+      description: "Ordered list of sub-component names that defines rendering order"
+      example: [ModalHeader, ModalBody, ModalFooter]
+
+    rendering:
+      required: true
+      fields:
+        strategy: { type: enum, values: [inline, portal] }
+        description: { type: string }
+
+    dependencies:
+      required: false
+      type: map
+      description: "External component dependencies by domain"
+      example:
+        atoms: [Overlay, Spinner]
+
+    communication:
+      required: false
+      description: "How parent and children share state"
+      fields:
+        pattern: { type: enum, values: [context, events, props] }
+        shared_state: { type: "string[]", description: "Attributes shared with children" }
+
+  sub_components:
+    description: "Each sub-component is defined inline with its own mini-spec"
+    required_fields:
+      name: { type: string, format: PascalCase }
+      tag: { type: string }
+      description: { type: string, language: english }
+      required: { type: boolean }
+    optional_fields:
+      attributes: "Same schema as top-level attributes"
+      content: "Same schema as top-level content"
+      visual_mapping: "Same schema as top-level visual_mapping"
+      accessibility: "Same schema as top-level accessibility"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Control (Form Components)
+# ─────────────────────────────────────────────
+
+control_definition:
+  description: "Required for form components: Input, Textarea, Select, Checkbox, Radio, Switch"
+  fields:
+    mode:
+      type: enum
+      required: true
+      values: [controlled-only, uncontrolled-only, both]
+    value:
+      required: true
+      fields:
+        type: { required: true }
+        description: { required: true }
+    default_value:
+      required: "when mode=both or mode=uncontrolled-only"
+      fields:
+        type: { required: true }
+        description: { required: true }
+    on_change:
+      required: true
+      fields:
+        payload: { required: true, type: map }
+        description: { required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 10: Accessibility
+# ─────────────────────────────────────────────
+
+accessibility_definition:
+  fields:
+    aria:
+      required: true
+      type: map
+      description: "ARIA attributes. Keys are attribute names without 'aria-' prefix."
+    keyboard:
+      required: true
+      type: map
+      description: "Key=keyboard key, Value=interaction name from interactions section"
+    focus:
+      required: true
+      type: string
+      description: "Focus behavior description"
+
+# ─────────────────────────────────────────────
+# SECTION 11: Language & Style Rules
+# ─────────────────────────────────────────────
+
+language_rules:
+  all_text: english
+  description_style: noun-phrase
+  description_examples:
+    good: "Primary interaction button with multiple visual variants and states"
+    bad: "This is a button that can be used for primary interactions"
+  no_ambiguous_words: ["usually", "sometimes", "might", "can be", "etc."]
+
+# ─────────────────────────────────────────────
+# SECTION 12: Validation Checklist
+# ─────────────────────────────────────────────
+
+validation_checklist:
+  errors:
+    - All required sections present
+    - All attribute types from closed type algebra
+    - All data_attributes use defined strategies (value-mapped, present-when-true, priority-enum)
+    - All interactions have structured conditions (not natural language)
+    - All interactions with effect=emit have payload defined
+    - Form components have control section
+    - Compound components use unified sub_components pattern
+    - All text in English
+    - No YAML string "undefined" — use null (~)
+
+  warnings:
+    - Components with dependencies should declare them in composition.dependencies
+    - Components with size enum should reference shared tokens or provide size_map
+    - Animation/transition behavior should be documented if present

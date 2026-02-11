@@ -1,0 +1,23 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<CheckboxProps>"
+
+props_mapping:
+  size: { name: size, type: "String as PropType<CheckboxSize>" }
+  checked: { name: checked, type: Boolean }
+  indeterminate: { name: indeterminate, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  toggle: "@change"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(CheckboxDef)"

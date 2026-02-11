@@ -1,0 +1,50 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+  pattern: compound  # SegmentedControl + SegmentedControl.Item
+
+props_mapping:
+  size: { name: size, type: SegmentedControlSize }
+  full-width: { name: fullWidth, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof SegmentedControlStyleProps | 'data-size' | 'data-full-width' | 'data-disabled' | 'role'>"
+
+content_mapping:
+  default: children
+
+event_mapping: {}
+
+composition_mapping:
+  SegmentedControlItem: SegmentedControl.Item
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SegmentedControlDef)"
+  compound_attachment: "SegmentedControl.Item = SegmentedControlItem (property assignment after factory)"
+  notes: |
+    Both SegmentedControl and SegmentedControlItem are factory-generated.
+    The compound pattern is achieved by attaching Item as a static property.
+    Roving tabindex and keyboard navigation are the consumer's responsibility
+    in the current implementation.
+  hooks: []
+  internal_deps: [createComponent]
+
+sub_component_specs:
+  SegmentedControlItem:
+    ref: HTMLButtonElement
+    props_mapping:
+      selected: { name: selected, type: boolean }
+      disabled: { name: disabled, type: boolean }
+      native: "Omit<ComponentPropsWithoutRef<'button'>, keyof SegmentedControlItemStyleProps | 'data-state' | 'aria-selected'>"
+    content_mapping:
+      default: children
+    event_mapping:
+      select: onClick
+    implementation:
+      strategy: factory
+      factory: "createComponent(SegmentedControlItemDef)"

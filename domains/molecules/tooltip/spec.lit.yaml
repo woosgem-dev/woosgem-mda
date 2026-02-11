@@ -1,0 +1,42 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-tooltip
+  shadow_dom: false
+  base_class: LitElement
+
+props_mapping:
+  content: { attribute: content, type: String, default: "" }
+  position: { attribute: position, type: String, default: top }
+  trigger: { attribute: trigger, type: String, default: hover }
+  delay: { attribute: delay, type: Number, default: 0 }
+  arrow: { attribute: arrow, type: Boolean, default: true }
+  visible: { attribute: visible, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+
+content_mapping:
+  default: "<slot>"
+
+event_mapping:
+  show: "visible-change (CustomEvent, detail.visible=true)"
+  hide: "visible-change (CustomEvent, detail.visible=false)"
+
+implementation:
+  strategy: manual
+  base_class: LitElement
+  registration: "customElements.define('wg-tooltip', Tooltip)"
+  behaviors:
+    controlled-visible:
+      pattern: effect
+      description: "Internal _internalVisible @state manages uncontrolled visibility"
+    trigger-handlers:
+      pattern: callback
+      description: "Render method attaches event listeners conditionally based on trigger prop"
+    delay-timeout:
+      pattern: ref
+      description: "_timeoutId manages show delay with disconnectedCallback cleanup"
+    light-dom:
+      pattern: ref
+      description: "createRenderRoot returns this for light DOM rendering (ds-styles compatibility)"

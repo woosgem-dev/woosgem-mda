@@ -1,7 +1,8 @@
 component:
   name: SegmentedControl
   category: organism
-  description: 상호 배타적인 선택지를 수평으로 나열하는 컨트롤. 라디오 버튼의 시각적 대안으로, 하나의 항목만 선택 가능하다.
+  description: Mutually exclusive selection control displaying options in a horizontal row. A visual alternative to radio buttons where only one item can be selected at a time.
+  complexity: behavioral
 
 semantics:
   tag: div
@@ -12,94 +13,132 @@ attributes:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 컨트롤 전체의 크기. 내부 항목(Item)도 이 크기를 따른다.
+    description: Size of the entire control. All child items inherit this size.
   full-width:
     type: boolean
     default: false
-    description: 부모 컨테이너 너비 전체를 차지할지 여부. true이면 각 항목이 균등 분할된다.
+    description: Whether the control fills the parent container width. When true, items are equally divided.
   disabled:
     type: boolean
     default: false
-    description: 컨트롤 전체 비활성화. true이면 모든 항목이 비활성화된다.
+    description: Whether the entire control is disabled. When true, all items become disabled regardless of their individual state.
+
+content:
+  default:
+    description: Container area for SegmentedControlItem sub-components.
+    required: true
+    type: component-list
+    cardinality: multiple
+    accepts: [SegmentedControlItem]
+
+states:
+  item-selected:
+    visual: Selected item displays a background highlight or indicator. Unselected items show default styling.
+    behavior: Only one item can be selected at a time. Selecting a new item deselects the previous one.
+    aria:
+      selected: true
+  item-disabled:
+    visual: Disabled item appears dimmed.
+    behavior: Click is ignored. Item is not focusable.
+    aria:
+      disabled: true
+  group-disabled:
+    visual: All items appear dimmed.
+    behavior: All item clicks are ignored.
+    aria: {}
+
+interactions:
+  select:
+    triggers: [click, Enter, Space]
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload:
+      value: string
+      index: number
+    description: Selects the item, deselecting the previously selected item. Both the item and parent control must not be disabled.
+  navigate-next:
+    triggers: [ArrowRight]
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: set
+    description: Moves focus to the next enabled item, skipping disabled ones.
+  navigate-prev:
+    triggers: [ArrowLeft]
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: set
+    description: Moves focus to the previous enabled item, skipping disabled ones.
+
+accessibility:
+  aria:
+    role: "group (on the container)"
+    label: "Descriptive label for the control purpose (via aria-label or aria-labelledby)"
+    selected: "true on the selected item"
+    disabled: "true on disabled items"
+  keyboard:
+    Enter: select
+    Space: select
+    ArrowRight: "Move focus to next item (skip disabled)"
+    ArrowLeft: "Move focus to previous item (skip disabled)"
+  focus: Roving tabindex pattern. The selected item has tabIndex=0; all others have tabIndex=-1.
+
+visual_mapping:
+  class: segmented-control
+  data_attributes:
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-full-width:
+      strategy: present-when-true
+      source: full-width
+    data-disabled:
+      strategy: present-when-true
+      source: disabled
 
 composition:
-  regions:
-    items:
-      component: SegmentedControlItem
+  layout: [SegmentedControlItem]
+
+  rendering:
+    strategy: inline
+    description: Rendered inline within the normal DOM flow.
+
+  communication:
+    pattern: context
+    shared_state: [size, disabled, selectedValue]
+
+  sub_components:
+    - name: SegmentedControlItem
       tag: button
-      description: 개별 선택 항목. 하나의 SegmentedControl 안에 2개 이상의 Item이 포함된다.
+      description: Individual selectable item within the control. Two or more items are required in a single SegmentedControl.
       required: true
       attributes:
         selected:
           type: boolean
           default: false
-          description: 현재 항목이 선택된 상태인지 여부. 동시에 하나의 항목만 selected=true일 수 있다.
+          description: Whether this item is currently selected. Only one item can be selected at a time.
         disabled:
           type: boolean
           default: false
-          description: 개별 항목의 비활성화 여부. 부모의 disabled=true이면 이 값과 무관하게 비활성화된다.
+          description: Whether this individual item is disabled. Overridden by the parent disabled attribute.
       content:
         default:
-          description: 항목의 레이블 텍스트 또는 아이콘.
+          description: Item label text or icon.
           required: true
+          type: node
       visual_mapping:
         class: segmented-control-item
         data_attributes:
-          data-state: "selected > disabled > undefined (우선순위)"
-  rendering:
-    strategy: inline
-    description: DOM 흐름에 따라 인라인으로 렌더링된다.
-
-content:
-  default:
-    description: SegmentedControlItem 항목들을 배치하는 영역.
-    required: true
-
-states:
-  item-selected:
-    visual: 선택된 항목에 배경색 또는 인디케이터가 표시된다. 선택되지 않은 항목은 기본 스타일.
-    behavior: 한 번에 하나의 항목만 선택 가능. 새 항목 선택 시 기존 선택이 해제된다.
-    aria:
-      selected: true
-  item-disabled:
-    visual: 항목이 흐리게 표시된다.
-    behavior: 클릭 무시. 포커스 불가.
-    aria:
-      disabled: true
-  group-disabled:
-    visual: 모든 항목이 흐리게 표시된다.
-    behavior: 모든 항목의 클릭 무시.
-
-interactions:
-  select:
-    triggers: [click, Enter, Space]
-    condition: 해당 항목과 부모 컨트롤 모두 disabled=false
-    description: 항목을 선택한다. 기존 선택이 해제되고 새 항목이 선택된다.
-  navigate-next:
-    triggers: [ArrowRight]
-    condition: 컨트롤에 포커스가 있을 때
-    description: 다음 활성 항목으로 포커스 이동.
-  navigate-prev:
-    triggers: [ArrowLeft]
-    condition: 컨트롤에 포커스가 있을 때
-    description: 이전 활성 항목으로 포커스 이동.
-
-accessibility:
-  aria:
-    role: "group (컨테이너)"
-    selected: "선택된 항목에 true"
-    disabled: "비활성 항목에 true"
-    label: "컨트롤의 용도를 설명하는 레이블 (aria-label 또는 aria-labelledby)"
-  keyboard:
-    Enter: "현재 포커스된 항목 선택"
-    Space: "현재 포커스된 항목 선택"
-    ArrowRight: "다음 항목으로 포커스 이동 (비활성 건너뜀)"
-    ArrowLeft: "이전 항목으로 포커스 이동 (비활성 건너뜀)"
-  focus: 로빙 탭인덱스(roving tabindex) 패턴. 선택된 항목만 tabIndex=0, 나머지는 tabIndex=-1.
-
-visual_mapping:
-  class: segmented-control
-  data_attributes:
-    data-size: size
-    data-full-width: "full-width가 true일 때 존재"
-    data-disabled: "disabled가 true일 때 존재"
+          data-state:
+            strategy: priority-enum
+            priority:
+              - { when: { attr: selected, eq: true }, value: selected }
+              - { when: { attr: disabled, eq: true }, value: disabled }
+            fallback: absent
+      accessibility:
+        aria:
+          selected: "true when item is selected"
+          disabled: "true when item or parent is disabled"

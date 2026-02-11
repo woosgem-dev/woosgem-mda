@@ -1,0 +1,39 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<TabProps>"
+  pattern: flat  # Tab is a single button element
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<TabVariant>" }
+  size: { name: size, type: "String as PropType<TabSize>" }
+  color: { name: color, type: "String as PropType<TabColor>" }
+  selected: { name: selected, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+  full-width: { name: fullWidth, type: Boolean }
+  additional:
+    onClick: { name: onClick, type: "(e: MouseEvent) => void" }
+    type: { name: type, type: "String as PropType<'button' | 'submit' | 'reset'>" }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  select: "@click"
+
+composition_mapping:
+  TabList: "External — consumer wraps Tab items in a div with role=tablist"
+  TabPanel: "External — consumer manages TabPanel visibility"
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TabDef)"
+  notes: |
+    Single button element produced by the factory.
+    TabList and TabPanel are the consumer's responsibility.
+    Roving tabindex and arrow key navigation must be managed by the consumer.
+  internal_deps: [createComponent]

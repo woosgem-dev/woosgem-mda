@@ -1,0 +1,28 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-switch
+  shadow_dom: false
+
+props_mapping:
+  size: { attribute: size, type: String, default: md }
+  color: { attribute: color, type: String, default: primary }
+  checked: { attribute: checked, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  toggle: "click"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SwitchCore, 'wg-switch', { props, events })"
+  registration: "customElements.define('wg-switch', Switch)"
+  behaviors:
+    disabled-click-guard:
+      pattern: callback
+      description: "Prevents click propagation when disabled=true"

@@ -1,0 +1,107 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+  pattern: compound  # Modal, ModalHeader, ModalBody, ModalFooter
+
+props_mapping:
+  open: { name: open, type: boolean }
+  size: { name: size, type: ModalSize }
+  closable: { name: closable, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ModalStyleProps | 'data-size' | 'data-open' | 'data-closable' | 'role' | 'aria-modal' | 'aria-hidden'>"
+  additional:
+    onClose: { type: "() => void", description: "Callback when modal requests to close" }
+    title: { type: string, description: "Modal title for aria-labelledby" }
+    container: { type: HTMLElement, description: "Portal container (default: document.body)" }
+    disableFocusTrap: { type: boolean, default: false }
+    disableEscapeKey: { type: boolean, default: false }
+    disableOverlayClick: { type: boolean, default: false }
+
+content_mapping:
+  default: children
+
+event_mapping:
+  close: onClose
+
+composition_mapping:
+  ModalHeader: ModalHeader
+  ModalBody: ModalBody
+  ModalFooter: ModalFooter
+  rendering: "createPortal(children, container || document.body)"
+
+implementation:
+  strategy: manual
+  factory_usage: partial  # BaseModal uses createComponent; root Modal is manual forwardRef
+  behaviors:
+    scroll-lock:
+      pattern: effect
+      on: "open=true"
+      setup: "document.body.style.overflow = 'hidden'"
+      cleanup: "document.body.style.overflow = originalOverflow"
+    focus-trap:
+      pattern: effect
+      on: "open=true"
+      strategy: tab-wrapping
+      scope: modal-container
+      details: "Intercepts Tab/Shift+Tab keydown events. Wraps focus from last to first and first to last focusable element."
+    focus-restore:
+      pattern: ref
+      save: "document.activeElement stored in previousActiveElement ref on open"
+      restore: "previousActiveElement.focus() on cleanup"
+    initial-focus:
+      pattern: effect
+      on: "open=true"
+      details: "requestAnimationFrame -> focus first focusable element or modal itself"
+    escape-key:
+      pattern: effect
+      on: "open=true"
+      details: "document.addEventListener('keydown', handler) for Escape key"
+    overlay-click:
+      pattern: callback
+      details: "onClick on overlay div calls onClose when closable && !disableOverlayClick"
+    conditional-render:
+      pattern: "early return null when open=false"
+  hooks: [useEffect, useCallback, useRef, forwardRef, memo]
+  internal_deps: [createComponent, createPortal]
+
+sub_component_specs:
+  ModalHeader:
+    ref: HTMLDivElement
+    props_mapping:
+      show-close: { name: showClose, type: boolean }
+      native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ModalHeaderStyleProps | 'data-show-close'>"
+      additional:
+        onClose: { type: "() => void", description: "Callback when close button is clicked" }
+    content_mapping:
+      default: children
+    event_mapping:
+      close: onClose
+    implementation:
+      strategy: manual
+      factory_usage: partial  # BaseModalHeader via createComponent
+      details: "Renders modal-title div with children and conditional close button with SVG icon"
+
+  ModalBody:
+    ref: HTMLDivElement
+    props_mapping:
+      scrollable: { name: scrollable, type: boolean }
+      native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ModalBodyStyleProps | 'data-scrollable'>"
+    content_mapping:
+      default: children
+    implementation:
+      strategy: factory
+      factory: "createComponent(ModalBodyDef)"
+
+  ModalFooter:
+    ref: HTMLDivElement
+    props_mapping:
+      align: { name: align, type: "'start' | 'center' | 'end'" }
+      native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ModalFooterStyleProps | 'data-align'>"
+    content_mapping:
+      default: children
+    implementation:
+      strategy: factory
+      factory: "createComponent(ModalFooterDef)"

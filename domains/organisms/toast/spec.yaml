@@ -1,7 +1,8 @@
 component:
   name: Toast
   category: organism
-  description: 사용자에게 일시적인 알림 메시지를 표시하는 컴포넌트. 화면 모서리에 위치하며, 지정된 시간 후 자동으로 사라진다.
+  description: Temporary notification message displayed at a screen edge. Supports auto-dismiss with a configurable timer, multiple positioning options, and variant-based styling.
+  complexity: behavioral
 
 semantics:
   tag: div
@@ -12,105 +13,151 @@ attributes:
     type: enum
     values: [info, success, warning, error]
     default: info
-    description: 메시지 유형에 따른 시각적 스타일. 아이콘과 색상이 변형에 따라 달라진다.
+    description: Message type determining the visual style, icon, and color.
   position:
     type: enum
     values: [top-right, top-left, bottom-right, bottom-left, top-center, bottom-center]
     default: top-right
-    description: 토스트가 화면에 나타나는 위치.
+    description: Screen position where the toast appears.
   duration:
     type: number
     default: 5000
-    description: 자동 닫힘까지의 시간(밀리초). 0이면 자동으로 닫히지 않는다.
+    min: 0
+    description: Auto-dismiss delay in milliseconds. 0 disables auto-dismiss.
   closable:
     type: boolean
     default: true
-    description: 닫기 버튼 표시 여부. true이면 사용자가 수동으로 닫을 수 있다.
+    description: Whether the close button is displayed, allowing manual dismissal.
   visible:
     type: boolean
     default: true
-    description: 토스트 표시 여부. 진입/퇴장 애니메이션의 제어에 사용된다.
-
-composition:
-  regions:
-    icon:
-      description: 메시지 유형을 나타내는 아이콘 영역. variant에 따라 기본 아이콘이 결정된다.
-      required: false
-      content:
-        default:
-          description: 커스텀 아이콘. 미지정 시 variant에 맞는 기본 아이콘이 표시된다.
-          required: false
-    body:
-      description: 알림 메시지 본문 영역.
-      required: true
-      content:
-        default:
-          description: 알림 텍스트 또는 커스텀 콘텐츠.
-          required: true
-    action:
-      description: 토스트에 부가적인 액션 버튼을 배치하는 영역 (예: "되돌리기").
-      required: false
-      content:
-        default:
-          description: 액션 버튼 또는 링크.
-          required: false
-  rendering:
-    strategy: portal
-    description: 문서 최상위(body)에 렌더링하여 z-index 충돌을 방지한다. 동일 position의 토스트들은 스택으로 쌓인다.
+    description: Whether the toast is currently visible. Controls enter/exit animations.
 
 content:
   default:
-    description: 알림 메시지 텍스트 또는 커스텀 콘텐츠.
+    description: Notification message text or custom content.
     required: true
+    type: node
 
 states:
   visible:
-    visual: 토스트가 지정된 position에 표시된다. 진입 애니메이션(슬라이드 인 + 페이드 인) 적용.
-    behavior:
-      - duration > 0이면 타이머 시작
-      - 호버 시 자동 닫힘 타이머 일시 정지
-      - 호버 해제 시 잔여 시간만큼 타이머 재개
+    visual: Toast is displayed at the configured position with a slide-in and fade-in animation.
+    behavior: Auto-dismiss timer starts when duration > 0. Hovering pauses the timer; leaving resumes it with the remaining time.
     aria:
       live: polite
       atomic: true
   hidden:
-    visual: 퇴장 애니메이션(슬라이드 아웃 + 페이드 아웃) 후 DOM에서 제거.
-    behavior: 타이머 정지, 콜백 호출.
+    visual: Exit animation (slide-out + fade-out) plays, then the toast is removed from the DOM.
+    behavior: Timer is cleared. Close callback is invoked.
+    aria: {}
   auto-dismissing:
-    visual: duration 시간이 경과하면 visible에서 hidden으로 전환.
-    behavior: 자동으로 close 인터랙션이 트리거된다.
+    visual: Transitions from visible to hidden when the duration elapses.
+    behavior: The close interaction is triggered automatically.
+    aria: {}
 
 interactions:
   close:
-    triggers:
-      - 닫기 버튼 클릭 (closable=true일 때)
-      - duration 시간 경과 (duration > 0일 때)
-    condition: visible=true
-    description: 토스트를 닫는다. 퇴장 애니메이션 후 제거된다.
+    triggers: [close-button-click, timer-elapsed]
+    condition:
+      all:
+        - { attr: visible, eq: true }
+    effect: emit
+    payload:
+      source: string  # "manual" | "auto"
+    description: Dismisses the toast. Plays exit animation and then removes it.
   pause-timer:
     triggers: [pointerenter]
-    condition: visible=true AND duration > 0
-    description: 토스트 위에 커서를 올리면 자동 닫힘 타이머를 일시 정지한다.
+    condition:
+      all:
+        - { attr: visible, eq: true }
+        - { attr: duration, neq: 0 }
+    effect: set
+    description: Pauses the auto-dismiss timer when the pointer enters the toast.
   resume-timer:
     triggers: [pointerleave]
-    condition: 타이머가 일시 정지된 상태
-    description: 커서가 토스트에서 벗어나면 잔여 시간만큼 타이머를 재개한다.
+    condition:
+      all:
+        - { attr: visible, eq: true }
+    effect: set
+    description: Resumes the auto-dismiss timer with the remaining time when the pointer leaves.
 
 accessibility:
   aria:
-    role: "alert"
-    live: "polite - 스크린 리더가 현재 읽기를 완료한 후 알림을 읽는다"
-    atomic: "true - 변경 시 전체 콘텐츠를 다시 읽는다"
+    role: alert
+    live: "polite — screen reader announces the toast after finishing current speech"
+    atomic: "true — entire content is re-read on change"
   keyboard:
-    Tab: "closable=true일 때 닫기 버튼으로 포커스 이동"
-    Enter: "포커스된 닫기 버튼 또는 액션 버튼 활성화"
-    Escape: "포커스가 토스트 내부에 있을 때 닫기 (closable=true)"
-  focus: 토스트 자체는 자동 포커스되지 않는다. 닫기 버튼과 액션 버튼만 포커스 가능.
+    Tab: "Moves focus to the close button or action button when closable=true"
+    Enter: "Activates the focused close button or action button"
+    Escape: "Dismisses the toast when focus is inside it and closable=true"
+  focus: The toast itself does not auto-focus. Only the close button and action button are focusable.
 
 visual_mapping:
   class: toast
   data_attributes:
-    data-variant: variant
-    data-position: position
-    data-closable: "closable이 true일 때 존재"
-    data-visible: "visible이 true일 때 존재"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-position:
+      strategy: value-mapped
+      source: position
+    data-closable:
+      strategy: present-when-true
+      source: closable
+    data-visible:
+      strategy: present-when-true
+      source: visible
+
+composition:
+  layout: [ToastIcon, ToastBody, ToastAction]
+
+  rendering:
+    strategy: portal
+    description: Rendered at the document top-level (body) to avoid z-index stacking context issues. Multiple toasts at the same position stack vertically.
+
+  communication:
+    pattern: props
+    shared_state: [variant, closable]
+
+  sub_components:
+    - name: ToastIcon
+      tag: span
+      description: Icon area indicating the message type. Displays a default icon based on the variant if no custom icon is provided.
+      required: false
+      attributes: {}
+      content:
+        default:
+          description: Custom icon. Falls back to variant-specific default icon when not provided.
+          required: false
+          type: node
+      visual_mapping:
+        class: toast-icon
+        data_attributes: {}
+
+    - name: ToastBody
+      tag: div
+      description: Main notification message area.
+      required: true
+      attributes: {}
+      content:
+        default:
+          description: Notification text or custom content.
+          required: true
+          type: node
+      visual_mapping:
+        class: toast-body
+        data_attributes: {}
+
+    - name: ToastAction
+      tag: div
+      description: Optional action area for additional buttons (e.g., "Undo").
+      required: false
+      attributes: {}
+      content:
+        default:
+          description: Action button or link.
+          required: false
+          type: node
+      visual_mapping:
+        class: toast-action
+        data_attributes: {}

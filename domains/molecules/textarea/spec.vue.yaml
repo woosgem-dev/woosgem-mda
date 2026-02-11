@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<TextareaProps>"
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<TextareaVariant>" }
+  size: { name: size, type: "String as PropType<TextareaSize>" }
+  resize: { name: resize, type: "String as PropType<TextareaResize>" }
+  disabled: { name: disabled, type: Boolean }
+  error: { name: error, type: Boolean }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: "@input"
+  focus: "@focus"
+  blur: "@blur"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TextareaDef)"

@@ -1,7 +1,8 @@
 component:
   name: Spinner
   category: atom
-  description: 로딩 인디케이터. 비동기 작업 진행 중임을 시각적으로 나타내는 회전 애니메이션 요소
+  complexity: simple
+  description: Loading indicator with rotating animation signaling asynchronous operation in progress
 
 semantics:
   tag: div
@@ -12,16 +13,16 @@ attributes:
     type: enum
     values: [xs, sm, md, lg]
     default: md
-    description: 스피너 크기
+    description: Spinner dimensions
   color:
     type: enum
     values: [primary, secondary, muted, current]
     default: primary
-    description: 스피너 색상. current는 부모의 currentColor를 따름
+    description: Spinner color. Current uses parent currentColor
   label:
     type: string
     default: "Loading..."
-    description: 스크린 리더용 로딩 상태 설명 텍스트
+    description: Accessible label text for screen readers
 
 content: {}
 
@@ -31,13 +32,17 @@ interactions: {}
 
 accessibility:
   aria:
-    role: "status 역할로 실시간 상태 전달"
-    label: "label 속성값이 aria-label로 매핑"
+    role: "status role communicates live region state"
+    label: "label attribute value mapped to aria-label"
   keyboard: {}
-  focus: 포커스 불가 (상태 표시 전용)
+  focus: "Not focusable (status indicator element)"
 
 visual_mapping:
   class: spinner
   data_attributes:
-    data-size: size
-    data-color: color
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-color:
+      strategy: value-mapped
+      source: color

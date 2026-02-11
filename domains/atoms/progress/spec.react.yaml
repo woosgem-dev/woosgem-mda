@@ -1,0 +1,27 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+
+props_mapping:
+  variant: { name: variant, type: ProgressVariant }
+  color: { name: color, type: ProgressColor }
+  size: { name: size, type: ProgressSize }
+  value: { name: value, type: number }
+  max: { name: max, type: number }
+  show-label: { name: showLabel, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof ProgressStyleProps | 'data-variant' | 'data-color' | 'data-size' | 'data-show-label' | 'role' | 'aria-valuenow' | 'aria-valuemin' | 'aria-valuemax'>"
+
+content_mapping:
+  default: children
+
+event_mapping: {}
+
+implementation:
+  strategy: manual
+  pattern: "forwardRef + memo with manual prop separation and inline sub-elements"
+  internal_deps: [ProgressDef, getProgressPercentage, filterNullish]
+  notes: "Manual implementation due to internal sub-elements (progress-track, progress-fill, progress-label)"

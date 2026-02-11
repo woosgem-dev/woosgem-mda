@@ -1,7 +1,8 @@
 component:
   name: Badge
   category: atom
-  description: 상태 표시 뱃지. 카테고리, 상태, 숫자 등을 시각적으로 강조하는 인라인 레이블
+  complexity: simple
+  description: Inline status label for displaying categories, states, or counts with visual emphasis
 
 semantics:
   tag: span
@@ -12,22 +13,24 @@ attributes:
     type: enum
     values: [solid, outline, subtle]
     default: solid
-    description: 시각적 스타일 변형
+    description: Visual style variant
   color:
     type: enum
     values: [primary, secondary, danger, success, warning, info]
     default: primary
-    description: 색상 테마
+    description: Color theme
   size:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 뱃지 크기
+    description: Badge size
 
 content:
   default:
-    description: 뱃지 텍스트 또는 숫자
+    description: Badge text or numeric content
     required: true
+    type: text
+    cardinality: single
 
 states: {}
 
@@ -35,13 +38,19 @@ interactions: {}
 
 accessibility:
   aria:
-    label: "뱃지 내용이 시각적 의미만 전달할 경우 보충 설명 제공"
+    label: "Supplementary description when badge content conveys only visual meaning"
   keyboard: {}
-  focus: 포커스 불가 (정보 표시 전용)
+  focus: "Not focusable (informational display element)"
 
 visual_mapping:
   class: badge
   data_attributes:
-    data-variant: variant
-    data-color: color
-    data-size: size
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-color:
+      strategy: value-mapped
+      source: color
+    data-size:
+      strategy: value-mapped
+      source: size

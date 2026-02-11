@@ -1,7 +1,8 @@
 component:
   name: Progress
   category: atom
-  description: 진행률 바. 작업의 완료 정도를 시각적으로 나타내는 수평 막대
+  complexity: simple
+  description: Horizontal progress bar visualizing task completion or score percentage
 
 semantics:
   tag: div
@@ -12,43 +13,47 @@ attributes:
     type: enum
     values: [default, gradient]
     default: default
-    description: 시각적 스타일 변형
+    description: Visual style variant
   color:
     type: enum
     values: [primary, success, warning, danger, neutral]
     default: primary
-    description: 진행률 바 색상
+    description: Progress bar fill color
   size:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 진행률 바 높이
+    description: Progress bar height
   value:
     type: number
     default: 0
-    description: 현재 진행 값. 0과 max 사이로 클램핑됨
+    min: 0
+    description: Current progress value. Clamped between 0 and max
   max:
     type: number
     default: 100
-    description: 최대값
+    min: 0
+    description: Maximum value
   show-label:
     type: boolean
     default: false
-    description: 진행률 퍼센트 레이블을 바 내부에 표시
+    description: Displays percentage label inside the progress bar fill area
 
 content:
   default:
-    description: 커스텀 레이블 콘텐츠. show-label 대신 직접 콘텐츠 제공 시 사용
+    description: Custom label content. Overrides default percentage label when provided
     required: false
+    type: node
+    cardinality: single
 
 states:
   in-progress:
-    visual: 채워진 영역이 value/max 비율에 따라 표시
-    behavior: CSS 커스텀 속성(--progress-value)으로 채움 비율 전달
+    visual: Fill area proportional to value/max ratio
+    behavior: CSS custom property --progress-value set to calculated percentage
     aria: { valuenow: value, valuemin: 0, valuemax: max }
   complete:
-    visual: 바가 100% 채워짐
-    behavior: value >= max 일 때 완료 상태
+    visual: Fill area at 100%
+    behavior: Triggered when value >= max
     aria: { valuenow: max, valuemin: 0, valuemax: max }
 
 interactions: {}
@@ -56,17 +61,25 @@ interactions: {}
 accessibility:
   aria:
     role: "progressbar"
-    valuenow: "현재 value (클램핑 후)"
-    valuemin: "항상 0"
-    valuemax: "max 값"
+    valuenow: "Current clamped value"
+    valuemin: "Always 0"
+    valuemax: "max attribute value"
   keyboard: {}
-  focus: 포커스 불가 (정보 표시 전용)
+  focus: "Not focusable (informational display element)"
 
 visual_mapping:
   class: progress
   data_attributes:
-    data-variant: variant
-    data-color: color
-    data-size: size
-    data-show-label: "show-label=true일 때만 존재"
-  inline_style: "--progress-value: {percentage}% (value/max * 100으로 계산, 0-100 클램핑)"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-color:
+      strategy: value-mapped
+      source: color
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-show-label:
+      strategy: present-when-true
+      source: show-label
+  inline_style: "--progress-value: {percentage}% (calculated as value/max * 100, clamped 0-100)"

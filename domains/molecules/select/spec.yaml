@@ -1,7 +1,8 @@
 component:
   name: Select
   category: molecule
-  description: 드롭다운 선택 컴포넌트. 트리거 버튼, 메뉴(listbox), 옵션으로 구성. 단일/다중 선택 지원
+  complexity: behavioral
+  description: Dropdown selection component composed of trigger button, menu (listbox), and options. Supports single and multiple selection modes
 
 semantics:
   tag: button
@@ -12,181 +13,252 @@ attributes:
     type: enum
     values: [outline, filled]
     default: outline
-    description: 트리거 버튼의 시각적 스타일
+    description: Visual style variant of the trigger button
   size:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: Select 컴포넌트 크기
+    description: Select component size applied to trigger, menu, and options
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태
+    description: Disabled state preventing all interaction
   error:
     type: boolean
     default: false
-    description: 오류 상태 표시
+    description: Error validation state indicator
   open:
     type: boolean
     default: false
-    description: 드롭다운 메뉴 열림 여부
+    description: Whether the dropdown menu is currently visible
   multiple:
     type: boolean
     default: false
-    description: 다중 선택 허용 여부
-
-composition:
-  regions:
-    trigger:
-      tag: button
-      description: 드롭다운을 여는 트리거 버튼. 선택된 값, 플레이스홀더, 아이콘을 표시
-      required: true
-    menu:
-      tag: ul
-      description: 옵션 목록을 담는 드롭다운 리스트박스 컨테이너
-      required: true
-    option:
-      tag: li
-      description: 개별 선택 옵션 항목
-      required: true
+    description: Enables multiple option selection mode
 
 content:
   value:
-    description: 선택된 값 텍스트 표시 영역
+    description: Display area for currently selected value text
     required: false
+    type: text
+    cardinality: single
   placeholder:
-    description: 값이 선택되지 않았을 때 표시되는 안내 텍스트
+    description: Hint text shown when no value is selected
     required: false
+    type: text
+    cardinality: single
   icon:
-    description: 드롭다운 화살표 아이콘
+    description: Dropdown arrow icon indicator
     required: false
+    type: node
+    cardinality: single
 
 states:
   open:
-    visual: 드롭다운 메뉴 표시, 트리거 버튼 활성 스타일
-    behavior: 옵션 탐색 및 선택 가능
+    visual: Dropdown menu visible, trigger button shows active style
+    behavior: Option navigation and selection enabled
     aria: { expanded: true }
   closed:
-    visual: 드롭다운 메뉴 숨김
-    behavior: 트리거 클릭/키보드로 열기 가능
+    visual: Dropdown menu hidden
+    behavior: Trigger click or keyboard opens the menu
     aria: { expanded: false }
   error:
-    visual: 테두리가 오류 색상으로 변경
-    behavior: 정상 동작하나 유효성 검사 실패 표시
+    visual: Border changes to error color
+    behavior: Normal interaction with validation failure indication
     aria: {}
   disabled:
-    visual: 흐리게 표시
-    behavior: 클릭 및 키보드 상호작용 불가
+    visual: Reduced opacity
+    behavior: All click and keyboard interaction blocked
     aria: { disabled: true }
 
 interactions:
   toggle:
     triggers: [click, Enter, Space]
-    condition: disabled=false
-    description: 드롭다운 메뉴 열기/닫기 토글
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: toggle
+    description: Toggle dropdown menu open/close state
   select-option:
     triggers: [click, Enter]
-    condition: open=true AND option.disabled=false
-    description: 옵션 선택
+    condition:
+      all:
+        - { attr: open, eq: true }
+    effect: emit
+    payload:
+      value: string
+      label: string
+    description: Select an option from the dropdown list
   navigate:
     triggers: [ArrowUp, ArrowDown]
-    condition: open=true
-    description: 옵션 간 이동 (하이라이트)
+    condition:
+      all:
+        - { attr: open, eq: true }
+    effect: set
+    description: Move highlight between options using arrow keys
   close:
     triggers: [Escape, Tab, click-outside]
-    condition: open=true
-    description: 드롭다운 메뉴 닫기
+    condition:
+      all:
+        - { attr: open, eq: true }
+    effect: set
+    description: Close the dropdown menu and return focus to trigger
 
 accessibility:
   aria:
-    expanded: "open 상태에 따라 true/false"
+    expanded: "Reflects open state as true/false"
     haspopup: "listbox"
-    disabled: "disabled=true일 때"
-    selected: "각 옵션의 선택 상태"
-    multiselectable: "multiple=true일 때 listbox에 설정"
+    disabled: "Set when disabled=true"
+    activedescendant: "Points to currently highlighted option ID"
   keyboard:
-    Enter: "닫힌 상태에서 열기, 열린 상태에서 하이라이트된 옵션 선택"
-    Space: "닫힌 상태에서 열기, 열린 상태에서 하이라이트된 옵션 선택"
-    ArrowDown: "다음 옵션으로 하이라이트 이동"
-    ArrowUp: "이전 옵션으로 하이라이트 이동"
-    Escape: "드롭다운 닫기, 트리거에 포커스 복귀"
-    Tab: "드롭다운 닫기, 다음 요소로 포커스 이동"
-    Home: "첫 번째 옵션으로 이동"
-    End: "마지막 옵션으로 이동"
-  focus: 트리거 버튼에 포커스 링 표시. 열릴 때 첫 번째(또는 선택된) 옵션으로 포커스 이동
+    Enter: "Closed: open menu. Open: select highlighted option"
+    Space: "Closed: open menu. Open: select highlighted option"
+    ArrowDown: "Move highlight to next option"
+    ArrowUp: "Move highlight to previous option"
+    Escape: "Close dropdown, return focus to trigger"
+    Tab: "Close dropdown, move focus to next element"
+    Home: "Move highlight to first option"
+    End: "Move highlight to last option"
+  focus: Focus ring on trigger button. When opened, first or selected option receives focus
 
-# --- Select 트리거 (기본 컴포넌트) ---
 visual_mapping:
   class: select
   data_attributes:
-    data-variant: variant
-    data-size: size
-    data-state: "disabled > error > open > undefined (우선순위)"
-    data-multiple: "multiple=true일 때 존재"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { attr: disabled, eq: true }, value: disabled }
+        - { when: { attr: error, eq: true }, value: error }
+        - { when: { attr: open, eq: true }, value: open }
+      fallback: absent
+    data-multiple:
+      strategy: present-when-true
+      source: multiple
 
-# --- 서브컴포넌트 ---
-sub_components:
-  select-menu:
-    component:
-      name: SelectMenu
-      description: 옵션 목록을 담는 드롭다운 리스트박스 컨테이너
-    semantics:
+composition:
+  layout: [SelectMenu, SelectOption]
+  rendering:
+    strategy: inline
+    description: Menu renders adjacent to trigger button with CSS positioning
+  dependencies:
+    atoms: []
+  communication:
+    pattern: context
+    shared_state: [size, open, multiple, disabled]
+
+  sub_components:
+    - name: SelectMenu
       tag: ul
-      role: listbox
-    attributes:
-      size:
-        type: enum
-        values: [sm, md, lg]
-        default: md
-        description: 메뉴 크기 (트리거와 동일하게 설정)
-      open:
-        type: boolean
-        default: false
-        description: 메뉴 표시 여부
-      multiple:
-        type: boolean
-        default: false
-        description: 다중 선택 모드
-    visual_mapping:
-      class: select-menu
-      data_attributes:
-        data-size: size
-        data-state: "open=true이면 'open', 아니면 undefined"
+      description: Dropdown listbox container holding option items
+      required: true
+      attributes:
+        size:
+          type: enum
+          values: [sm, md, lg]
+          default: md
+          description: Menu size matching trigger size
+        open:
+          type: boolean
+          default: false
+          description: Menu visibility state
+        multiple:
+          type: boolean
+          default: false
+          description: Multiple selection mode
+      content:
+        default:
+          description: SelectOption component list
+          required: true
+          type: component-list
+          cardinality: multiple
+          accepts: [SelectOption]
+      visual_mapping:
+        class: select-menu
+        data_attributes:
+          data-size:
+            strategy: value-mapped
+            source: size
+          data-state:
+            strategy: priority-enum
+            priority:
+              - { when: { attr: open, eq: true }, value: open }
+            fallback: absent
+      accessibility:
+        aria:
+          multiselectable: "Set when multiple=true"
+        keyboard: {}
+        focus: "First or selected option receives focus when menu opens"
 
-  select-option:
-    component:
-      name: SelectOption
-      description: 개별 선택 옵션 항목
-    semantics:
+    - name: SelectOption
       tag: li
-      role: option
-    attributes:
-      size:
-        type: enum
-        values: [sm, md, lg]
-        default: md
-        description: 옵션 크기
-      selected:
-        type: boolean
-        default: false
-        description: 선택 상태
-      disabled:
-        type: boolean
-        default: false
-        description: 비활성화 상태
-      highlighted:
-        type: boolean
-        default: false
-        description: 키보드 탐색에 의한 하이라이트 상태
-    content:
-      default:
-        description: 옵션 텍스트 레이블
-        required: true
-      checkmark:
-        description: 선택됨 표시 아이콘 (다중 선택 시)
-        required: false
-    visual_mapping:
-      class: select-option
-      data_attributes:
-        data-size: size
-        data-state: "selected+disabled > disabled > highlighted > selected > undefined (우선순위)"
+      description: Individual selectable option item within the dropdown
+      required: true
+      attributes:
+        size:
+          type: enum
+          values: [sm, md, lg]
+          default: md
+          description: Option size matching menu size
+        selected:
+          type: boolean
+          default: false
+          description: Whether this option is currently selected
+        disabled:
+          type: boolean
+          default: false
+          description: Disabled state for this individual option
+        highlighted:
+          type: boolean
+          default: false
+          description: Keyboard navigation highlight state
+      content:
+        default:
+          description: Option text label
+          required: true
+          type: text
+          cardinality: single
+        checkmark:
+          description: Selection checkmark icon for multiple selection mode
+          required: false
+          type: node
+          cardinality: single
+      visual_mapping:
+        class: select-option
+        data_attributes:
+          data-size:
+            strategy: value-mapped
+            source: size
+          data-state:
+            strategy: priority-enum
+            priority:
+              - { when: { all: [{ attr: selected, eq: true }, { attr: disabled, eq: true }] }, value: selected-disabled }
+              - { when: { attr: disabled, eq: true }, value: disabled }
+              - { when: { attr: highlighted, eq: true }, value: highlighted }
+              - { when: { attr: selected, eq: true }, value: selected }
+            fallback: absent
+      accessibility:
+        aria:
+          selected: "Reflects selected state"
+          disabled: "Set when disabled=true"
+        keyboard: {}
+        focus: "Receives focus via arrow key navigation"
+
+control:
+  mode: both
+  value:
+    type: "string | string[]"
+    description: Currently selected value (string for single, string[] for multiple mode)
+  default_value:
+    type: "string | string[]"
+    description: Initial selected value for uncontrolled usage
+  on_change:
+    payload:
+      value: "string | string[]"
+      option: "{ value: string, label: string }"
+    description: Fired when selected option changes

@@ -1,0 +1,28 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLInputElement
+
+props_mapping:
+  variant: { name: variant, type: InputVariant }
+  size: { name: size, type: InputSize }
+  error: { name: error, type: boolean }
+  success: { name: success, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'input'>, keyof InputStyleProps | 'data-variant' | 'data-size' | 'data-state' | 'aria-invalid'>"
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: onChange
+  focus: onFocus
+  blur: onBlur
+
+implementation:
+  strategy: factory
+  factory: "createComponent(InputDef)"
+  internal_deps: [PrefixContext, useId]

@@ -1,0 +1,22 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLSpanElement
+
+props_mapping:
+  size: { name: size, type: IconSize }
+  color: { name: color, type: IconColor }
+  native: "Omit<ComponentPropsWithoutRef<'span'>, keyof IconStyleProps | 'data-size' | 'data-color' | 'aria-hidden'>"
+
+content_mapping:
+  default: children
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(IconDef)"
+  internal_deps: [createComponent]

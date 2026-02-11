@@ -1,7 +1,8 @@
 component:
   name: Checkbox
   category: molecule
-  description: 체크박스 컴포넌트. Root(래퍼), Indicator(시각적 박스), Label(텍스트)의 복합 구조. 체크/미체크/불확정 3상태 지원
+  complexity: composite
+  description: Checkbox component with compound structure of Root (wrapper), Indicator (visual box), and Label (text). Supports checked, unchecked, and indeterminate tri-state
 
 semantics:
   tag: div
@@ -12,160 +13,198 @@ attributes:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 체크박스 크기
+    description: Checkbox size controlling indicator and label dimensions
   checked:
     type: boolean
     default: false
-    description: 체크 상태
+    description: Checked state of the checkbox
   indeterminate:
     type: boolean
     default: false
-    description: 불확정 상태 (일부만 선택된 경우)
+    description: Indeterminate state representing partial selection
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태
-
-composition:
-  regions:
-    root:
-      tag: label
-      description: 체크박스 전체를 감싸는 래퍼. label 태그로 클릭 영역 확장
-      required: true
-    indicator:
-      tag: span
-      description: 체크마크/불확정 마크가 표시되는 시각적 박스
-      required: true
-    label:
-      tag: span
-      description: 체크박스 설명 텍스트
-      required: false
+    description: Disabled state preventing user interaction
 
 content:
   default:
-    description: Indicator와 Label을 포함하는 체크박스 내부 구조
+    description: Internal structure containing Indicator and Label sub-components
     required: true
+    type: node
+    cardinality: single
 
 states:
   unchecked:
-    visual: 빈 체크박스 표시
-    behavior: 클릭 시 checked 상태로 전환
+    visual: Empty checkbox box displayed
+    behavior: Click transitions to checked state
     aria: { checked: false }
   checked:
-    visual: 체크마크 표시
-    behavior: 클릭 시 unchecked 상태로 전환
+    visual: Checkmark icon displayed inside indicator
+    behavior: Click transitions to unchecked state
     aria: { checked: true }
   indeterminate:
-    visual: 가로선(대시) 표시
-    behavior: 클릭 시 checked 상태로 전환 (일반적 동작)
+    visual: Horizontal dash icon displayed inside indicator
+    behavior: Click transitions to checked state
     aria: { checked: "mixed" }
   disabled:
-    visual: 흐리게 표시
-    behavior: 클릭 및 상호작용 불가
+    visual: Reduced opacity across all sub-components
+    behavior: All click and keyboard interaction blocked
     aria: { disabled: true }
 
 interactions:
   toggle:
     triggers: [click, Space]
-    condition: disabled=false
-    description: 체크 상태 토글
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: toggle
+    description: Toggle checkbox between checked and unchecked states
   focus:
     triggers: [Tab]
-    condition: disabled=false
-    description: 체크박스에 포커스
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload: {}
+    description: Checkbox receives keyboard focus
 
 accessibility:
   aria:
-    checked: "체크 상태에 따라 true/false/'mixed'"
-    disabled: "disabled=true일 때"
+    checked: "Reflects state as true/false/'mixed'"
+    disabled: "Set when disabled=true"
   keyboard:
-    Space: 체크 상태 토글
-    Tab: 포커스 이동
-  focus: 숨겨진 input 또는 체크박스 영역에 포커스 링 표시
-  notes:
-    - 실제 input[type=checkbox]를 시각적으로 숨기고 Indicator로 대체하는 패턴 사용
-    - label 태그가 Root이므로 클릭 영역이 전체로 확장됨
+    Space: toggle
+    Tab: focus
+  focus: Focus ring displayed on hidden input or checkbox indicator area
 
-# --- 레거시 단일 요소 (Checkbox) ---
 visual_mapping:
   class: checkbox
   data_attributes:
-    data-size: size
-    data-state: "disabled > indeterminate > checked > unchecked (우선순위)"
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { attr: disabled, eq: true }, value: disabled }
+        - { when: { attr: indeterminate, eq: true }, value: indeterminate }
+        - { when: { attr: checked, eq: true }, value: checked }
+      fallback: unchecked
 
-# --- 서브컴포넌트 ---
-sub_components:
-  checkbox-root:
-    component:
-      name: CheckboxRoot
-      description: 체크박스 전체를 감싸는 래퍼 컨테이너
-    semantics:
+composition:
+  layout: [CheckboxRoot, CheckboxIndicator, CheckboxLabel]
+  rendering:
+    strategy: inline
+    description: Root wraps Indicator and Label as direct children
+  communication:
+    pattern: context
+    shared_state: [size, checked, indeterminate, disabled]
+
+  sub_components:
+    - name: CheckboxRoot
       tag: label
-    attributes:
-      size:
-        type: enum
-        values: [sm, md, lg]
-        default: md
-        description: 체크박스 크기
-      disabled:
-        type: boolean
-        default: false
-        description: 비활성화 상태
-    visual_mapping:
-      class: checkbox-root
-      data_attributes:
-        data-size: size
-        data-disabled: "disabled=true일 때 존재"
+      description: Wrapper container extending click area across the entire checkbox. Uses label tag for native click delegation
+      required: true
+      attributes:
+        size:
+          type: enum
+          values: [sm, md, lg]
+          default: md
+          description: Root container size
+        disabled:
+          type: boolean
+          default: false
+          description: Disabled state propagated to children
+      visual_mapping:
+        class: checkbox-root
+        data_attributes:
+          data-size:
+            strategy: value-mapped
+            source: size
+          data-disabled:
+            strategy: present-when-true
+            source: disabled
 
-  checkbox-indicator:
-    component:
-      name: CheckboxIndicator
-      description: 체크마크/불확정 마크가 표시되는 시각적 박스 요소
-    semantics:
+    - name: CheckboxIndicator
       tag: span
-    attributes:
-      size:
-        type: enum
-        values: [sm, md, lg]
-        default: md
-        description: 인디케이터 크기
-      checked:
-        type: boolean
-        default: false
-        description: 체크 상태
-      indeterminate:
-        type: boolean
-        default: false
-        description: 불확정 상태
-      disabled:
-        type: boolean
-        default: false
-        description: 비활성화 상태
-    visual_mapping:
-      class: checkbox-indicator
-      data_attributes:
-        data-size: size
-        data-state: "disabled > indeterminate > checked > unchecked (우선순위)"
-    accessibility:
-      aria:
-        hidden: "true (장식 요소, 실제 상태는 숨겨진 input이 관리)"
+      description: Visual box element displaying checkmark or indeterminate dash icon. Decorative element with aria-hidden
+      required: true
+      attributes:
+        size:
+          type: enum
+          values: [sm, md, lg]
+          default: md
+          description: Indicator box size
+        checked:
+          type: boolean
+          default: false
+          description: Checked state from context
+        indeterminate:
+          type: boolean
+          default: false
+          description: Indeterminate state from context
+        disabled:
+          type: boolean
+          default: false
+          description: Disabled state from context
+      content:
+        default:
+          description: Check or dash icon content
+          required: false
+          type: node
+          cardinality: single
+      visual_mapping:
+        class: checkbox-indicator
+        data_attributes:
+          data-size:
+            strategy: value-mapped
+            source: size
+          data-state:
+            strategy: priority-enum
+            priority:
+              - { when: { attr: disabled, eq: true }, value: disabled }
+              - { when: { attr: indeterminate, eq: true }, value: indeterminate }
+              - { when: { attr: checked, eq: true }, value: checked }
+            fallback: unchecked
+      accessibility:
+        aria:
+          hidden: "true (decorative element, actual state managed by hidden input)"
+        keyboard: {}
+        focus: "Not focusable (decorative)"
 
-  checkbox-label:
-    component:
-      name: CheckboxLabel
-      description: 체크박스 설명 텍스트
-    semantics:
+    - name: CheckboxLabel
       tag: span
-    attributes:
-      disabled:
-        type: boolean
-        default: false
-        description: 비활성화 상태 (스타일 변경용)
-    content:
-      default:
-        description: 레이블 텍스트
-        required: true
-    visual_mapping:
-      class: checkbox-label
-      data_attributes:
-        data-disabled: "disabled=true일 때 존재"
+      description: Text label describing the checkbox purpose
+      required: false
+      attributes:
+        disabled:
+          type: boolean
+          default: false
+          description: Disabled state for style dimming
+      content:
+        default:
+          description: Label text content
+          required: true
+          type: text
+          cardinality: single
+      visual_mapping:
+        class: checkbox-label
+        data_attributes:
+          data-disabled:
+            strategy: present-when-true
+            source: disabled
+
+control:
+  mode: both
+  value:
+    type: boolean
+    description: Current checked state of the checkbox
+  default_value:
+    type: boolean
+    description: Initial checked state for uncontrolled usage
+  on_change:
+    payload:
+      checked: boolean
+      indeterminate: boolean
+    description: Fired when checkbox state changes

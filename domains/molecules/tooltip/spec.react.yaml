@@ -1,0 +1,38 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+
+props_mapping:
+  content: { name: content, type: string }
+  position: { name: position, type: TooltipPosition }
+  trigger: { name: trigger, type: TooltipTrigger }
+  delay: { name: delay, type: number }
+  arrow: { name: arrow, type: boolean }
+  visible: { name: visible, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof TooltipStyleProps | 'data-position' | 'data-trigger' | 'data-arrow' | 'data-visible' | 'data-disabled' | 'role'>"
+
+content_mapping:
+  default: children
+
+event_mapping:
+  show: ~
+  hide: ~
+
+implementation:
+  strategy: manual
+  internal_deps: [useId, useState, useCallback, useRef, useEffect]
+  behaviors:
+    controlled-visible:
+      pattern: effect
+      description: "Supports both controlled (visible prop) and uncontrolled (internal state) visibility"
+    trigger-handlers:
+      pattern: callback
+      description: "Dynamically attaches mouseenter/mouseleave, focus/blur, or click handlers based on trigger prop"
+    delay-timeout:
+      pattern: ref
+      description: "Manages show delay via setTimeout with cleanup on unmount"

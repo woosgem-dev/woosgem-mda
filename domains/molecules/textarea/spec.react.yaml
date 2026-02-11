@@ -1,0 +1,28 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLTextAreaElement
+
+props_mapping:
+  variant: { name: variant, type: TextareaVariant }
+  size: { name: size, type: TextareaSize }
+  resize: { name: resize, type: TextareaResize }
+  disabled: { name: disabled, type: boolean }
+  error: { name: error, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'textarea'>, keyof TextareaStyleProps | 'data-variant' | 'data-size' | 'data-resize' | 'data-state'>"
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: onChange
+  focus: onFocus
+  blur: onBlur
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TextareaDef)"
+  internal_deps: [PrefixContext, useId]

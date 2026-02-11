@@ -1,0 +1,103 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-modal
+  shadow_dom: false  # Light DOM via createRenderRoot override
+
+props_mapping:
+  open: { attribute: open, type: Boolean, reflect: true }
+  size: { attribute: size, type: String, reflect: true }
+  closable: { attribute: closable, type: Boolean, reflect: true }
+  additional:
+    disableFocusTrap: { attribute: disable-focus-trap, type: Boolean }
+    disableEscapeKey: { attribute: disable-escape-key, type: Boolean }
+    disableOverlayClick: { attribute: disable-overlay-click, type: Boolean }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping:
+  close: "CustomEvent('close')"
+
+composition_mapping:
+  ModalHeader: "wg-modal-header"
+  ModalBody: "wg-modal-body"
+  ModalFooter: "wg-modal-footer"
+  rendering:
+    portal: "Rendered inline (no native portal). Overlay and z-index managed via CSS."
+
+implementation:
+  strategy: manual
+  factory_usage: none  # Extends LitElement directly
+  behaviors:
+    scroll-lock:
+      pattern: "updated callback + disconnectedCallback"
+      on: "open property change"
+      setup: "document.body.style.overflow = 'hidden'"
+      cleanup: "restore on close or disconnectedCallback"
+    focus-trap:
+      pattern: "keydown listener"
+      details: "Tab/Shift+Tab wrapping within .modal element"
+    focus-restore:
+      pattern: "private field"
+      save: "previousActiveElement on openModal()"
+      restore: "previousActiveElement.focus() on closeModal()"
+    initial-focus:
+      pattern: "requestAnimationFrame in openModal()"
+      details: "Focus first focusable element or modal container"
+    escape-key:
+      pattern: "document keydown listener"
+      details: "emitEvent(this, 'close') on Escape"
+    overlay-click:
+      pattern: "@click handler on overlay div in render()"
+    conditional-render:
+      pattern: "return empty template when open=false"
+  lifecycle: [connectedCallback, disconnectedCallback, updated, createRenderRoot]
+  internal_deps: [applyAttrsToElement, emitEvent]
+
+sub_component_specs:
+  ModalHeader:
+    tag_name: wg-modal-header
+    shadow_dom: false
+    props_mapping:
+      show-close: { attribute: show-close, type: Boolean, reflect: true }
+    content_mapping:
+      default: "<slot></slot>"
+    event_mapping:
+      close: "CustomEvent('close')"
+    implementation:
+      strategy: manual
+      details: "Renders modal-title div with slot and optional close button with SVG"
+      lifecycle: [connectedCallback, updated, createRenderRoot]
+
+  ModalBody:
+    tag_name: wg-modal-body
+    shadow_dom: false
+    props_mapping:
+      scrollable: { attribute: scrollable, type: Boolean, reflect: true }
+    content_mapping:
+      default: "<slot></slot>"
+    implementation:
+      strategy: manual
+      details: "Applies core attrs via applyAttrsToElement, renders slot"
+      lifecycle: [connectedCallback, updated, createRenderRoot]
+
+  ModalFooter:
+    tag_name: wg-modal-footer
+    shadow_dom: false
+    props_mapping:
+      align: { attribute: align, type: String, reflect: true }
+    content_mapping:
+      default: "<slot></slot>"
+    implementation:
+      strategy: manual
+      details: "Applies core attrs via applyAttrsToElement, renders slot"
+      lifecycle: [connectedCallback, updated, createRenderRoot]
+
+custom_elements:
+  - { tag: wg-modal, class: Modal }
+  - { tag: wg-modal-header, class: ModalHeaderElement }
+  - { tag: wg-modal-body, class: ModalBodyElement }
+  - { tag: wg-modal-footer, class: ModalFooterElement }

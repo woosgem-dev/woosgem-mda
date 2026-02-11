@@ -1,0 +1,40 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLButtonElement
+  pattern: flat
+
+props_mapping:
+  variant: { name: variant, type: SelectVariant }
+  size: { name: size, type: SelectSize }
+  disabled: { name: disabled, type: boolean }
+  error: { name: error, type: boolean }
+  open: { name: open, type: boolean }
+  multiple: { name: multiple, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'button'>, keyof SelectStyleProps | 'data-variant' | 'data-size' | 'data-state' | 'data-multiple' | 'role' | 'aria-expanded' | 'aria-haspopup' | 'aria-disabled'>"
+
+content_mapping:
+  value: children
+  placeholder: placeholder prop
+  icon: ~
+
+event_mapping:
+  toggle: onClick
+  select-option: onChange
+  close: ~
+
+composition_mapping:
+  SelectMenu: SelectMenu
+  SelectOption: SelectOption
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SelectDef)"
+  internal_deps: [PrefixContext, useId]
+  behaviors:
+    dropdown:
+      pattern: effect
+      description: "Manages open/close state, outside click detection, and keyboard navigation"

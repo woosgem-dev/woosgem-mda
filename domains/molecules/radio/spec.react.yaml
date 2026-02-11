@@ -1,0 +1,30 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLButtonElement
+  pattern: flat
+
+props_mapping:
+  size: { name: size, type: RadioSize }
+  color: { name: color, type: RadioColor }
+  checked: { name: checked, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'button'>, keyof RadioStyleProps | 'data-size' | 'data-color' | 'data-state' | 'role' | 'aria-checked'>"
+
+content_mapping:
+  label: children
+
+event_mapping:
+  select: onClick
+  navigate: onKeyDown
+
+composition_mapping:
+  RadioGroup: RadioGroup
+
+implementation:
+  strategy: factory
+  factory: "createComponent(RadioDef)"
+  internal_deps: [PrefixContext, useId]

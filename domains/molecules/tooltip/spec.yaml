@@ -1,7 +1,8 @@
 component:
   name: Tooltip
   category: molecule
-  description: 툴팁. 트리거 요소에 호버/포커스/클릭 시 보충 정보를 팝업으로 표시하는 요소
+  complexity: behavioral
+  description: Supplemental information popup displayed on hover, focus, or click relative to a trigger element. Information-only (non-interactive content)
 
 semantics:
   tag: div
@@ -11,81 +12,97 @@ attributes:
   content:
     type: string
     default: ""
-    description: 툴팁에 표시될 텍스트 콘텐츠
+    description: Text content displayed inside the tooltip popup
   position:
     type: enum
     values: [top, bottom, left, right]
     default: top
-    description: 트리거 요소 기준 툴팁 표시 위치
+    description: Tooltip placement relative to the trigger element
   trigger:
     type: enum
     values: [hover, click, focus]
     default: hover
-    description: 툴팁을 활성화하는 이벤트 유형
+    description: Event type that activates tooltip visibility
   delay:
     type: number
     default: 0
-    description: 툴팁 표시 전 지연 시간 (밀리초)
+    description: Delay in milliseconds before tooltip appears after trigger activation
   arrow:
     type: boolean
     default: true
-    description: 트리거를 가리키는 화살표 표시 여부
+    description: Whether to render a directional arrow pointing toward the trigger
   visible:
     type: boolean
     default: false
-    description: 툴팁 표시 여부 (제어 모드)
+    description: Controlled visibility state for programmatic show/hide
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태. true이면 트리거 이벤트가 무시됨
+    description: Disabled state suppressing all trigger events
 
 content:
   default:
-    description: 툴팁이 연결되는 트리거 요소
+    description: Trigger element that the tooltip is attached to
     required: true
+    type: node
+    cardinality: single
 
 states:
   hidden:
-    visual: 툴팁 숨김
-    behavior: 트리거 이벤트 대기
+    visual: Tooltip popup not rendered or invisible
+    behavior: Awaiting trigger event activation
     aria: {}
   visible:
-    visual: 툴팁 표시, position에 따라 배치
-    behavior: 트리거 해제 시 숨김 전환
-    aria: { describedby: "툴팁 ID" }
+    visual: Tooltip popup displayed at specified position with optional arrow
+    behavior: Trigger release or Escape key hides the tooltip
+    aria: { describedby: "Tooltip element ID" }
   disabled:
-    visual: 트리거 이벤트 발생해도 툴팁 표시하지 않음
-    behavior: 모든 트리거 이벤트 무시
+    visual: Tooltip never appears regardless of trigger events
+    behavior: All trigger events ignored
     aria: {}
 
 interactions:
   show:
     triggers: [mouseenter, focus, click]
-    condition: disabled=false AND visible=false (trigger 속성에 따라 해당 이벤트만 반응)
-    description: 툴팁 표시
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+        - { attr: visible, eq: false }
+    effect: set
+    description: Display the tooltip popup based on trigger attribute event type
   hide:
     triggers: [mouseleave, blur, click-outside, Escape]
-    condition: visible=true
-    description: 툴팁 숨김
+    condition:
+      all:
+        - { attr: visible, eq: true }
+    effect: set
+    description: Hide the tooltip popup
 
 accessibility:
   aria:
-    describedby: "툴팁이 보일 때 트리거 요소에 aria-describedby로 툴팁 ID 연결"
+    describedby: "Trigger element linked to tooltip ID via aria-describedby when visible"
     role: "tooltip"
+    hidden: "Tooltip element uses aria-hidden when not visible"
   keyboard:
-    Escape: "툴팁 숨기기"
-    Tab: "포커스 트리거일 때 요소에 포커스 시 툴팁 표시"
-  focus: 트리거 요소에 포커스 시 trigger=hover 또는 trigger=focus일 때 툴팁 표시
-  notes:
-    - 툴팁은 정보 제공 전용. 인터랙티브 콘텐츠는 Popover 사용 권장
-    - 툴팁 콘텐츠는 aria-describedby로 연결되므로 스크린 리더가 읽을 수 있음
-    - Escape 키로 언제든 숨길 수 있어야 함 (WCAG 1.4.13)
+    Escape: "Hide tooltip (WCAG 1.4.13 requirement)"
+    Tab: "Show tooltip when trigger type is hover or focus"
+  focus: Trigger element receives focus; tooltip shown for hover/focus trigger modes
 
 visual_mapping:
   class: tooltip
   data_attributes:
-    data-position: position
-    data-trigger: trigger
-    data-arrow: "arrow=true일 때 존재"
-    data-visible: "visible=true일 때 존재"
-    data-disabled: "disabled=true일 때 존재"
+    data-position:
+      strategy: value-mapped
+      source: position
+    data-trigger:
+      strategy: value-mapped
+      source: trigger
+    data-arrow:
+      strategy: present-when-true
+      source: arrow
+    data-visible:
+      strategy: present-when-true
+      source: visible
+    data-disabled:
+      strategy: present-when-true
+      source: disabled

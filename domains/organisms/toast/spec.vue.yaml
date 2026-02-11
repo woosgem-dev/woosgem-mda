@@ -1,0 +1,63 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<ToastProps>"
+  pattern: flat
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<ToastVariant>", default: "'info'" }
+  position: { name: position, type: "String as PropType<ToastPosition>", default: "'top-right'" }
+  duration: { name: duration, type: Number, default: 5000 }
+  closable: { name: closable, type: Boolean, default: true }
+  visible: { name: visible, type: Boolean, default: true }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  close: "@close"
+  update-visible: "@update:visible"
+
+composition_mapping:
+  rendering: inline  # Toast is rendered by ToastContainer
+
+implementation:
+  strategy: manual
+  factory_usage: partial  # BaseToast via createComponent; root Toast is manual defineComponent
+  behaviors:
+    auto-dismiss:
+      pattern: "watch + timer"
+      on: "visible=true && duration > 0"
+      setup: "setTimeout(handleClose, duration)"
+      cleanup: "clearTimeout on watch change or onUnmounted"
+    conditional-render:
+      pattern: "return null in render when visible=false"
+  hooks: [defineComponent, h, ref, watch, onUnmounted, computed]
+  internal_deps: [createComponent]
+
+utilities:
+  ToastContainer:
+    description: Manages rendering of multiple Toast instances grouped by position.
+    define: "DefineComponent"
+    props:
+      toasts: { type: "Array as PropType<ToastItem[]>", required: true }
+      position: { type: "String as PropType<ToastPosition>", default: "'top-right'" }
+    emits: [dismiss]
+    implementation:
+      strategy: manual
+      details: "Groups toasts by position using computed, renders each group with Toast child components"
+
+  useToast:
+    description: Composable for managing toast notification state.
+    options:
+      defaultDuration: { type: number, default: 5000 }
+      maxToasts: { type: number, default: 5 }
+      defaultPosition: { type: ToastPosition, default: "'top-right'" }
+    returns:
+      toasts: "Ref<ToastItem[]>"
+      addToast: "(content: string, options?: Partial<ToastItem>) => string"
+      removeToast: "(id: string) => void"
+      clearAll: "() => void"

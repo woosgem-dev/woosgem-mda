@@ -1,0 +1,96 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<ModalProps>"
+  pattern: slots
+
+props_mapping:
+  open: { name: open, type: "Boolean as PropType<boolean>", default: false }
+  size: { name: size, type: "String as PropType<'sm' | 'md' | 'lg' | 'xl' | 'full'>", default: "'md'" }
+  closable: { name: closable, type: "Boolean as PropType<boolean>", default: true }
+  additional:
+    title: { name: title, type: "String as PropType<string>", default: ~ }
+    teleportTo: { name: teleportTo, type: "[String, Boolean] as PropType<string | false>", default: "'body'" }
+    disableFocusTrap: { name: disableFocusTrap, type: "Boolean as PropType<boolean>", default: false }
+    disableEscapeKey: { name: disableEscapeKey, type: "Boolean as PropType<boolean>", default: false }
+    disableOverlayClick: { name: disableOverlayClick, type: "Boolean as PropType<boolean>", default: false }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  close: "@close"
+  update-open: "@update:open"
+
+composition_mapping:
+  ModalHeader: "ModalHeader component (separate export)"
+  ModalBody: "ModalBody component (separate export)"
+  ModalFooter: "ModalFooter component (separate export)"
+  rendering:
+    portal: "<Teleport :to='teleportTo'>"
+    fallback: "teleportTo=false disables Teleport"
+
+implementation:
+  strategy: manual
+  factory_usage: none  # All manual defineComponent with setup
+  behaviors:
+    scroll-lock:
+      pattern: "watch + onUnmounted"
+      on: "open=true"
+      setup: "document.body.style.overflow = 'hidden'"
+      cleanup: "restore on close or onUnmounted"
+    focus-trap:
+      pattern: "watch + keydown listener"
+      details: "Tab/Shift+Tab wrapping on keydown within modalRef"
+    focus-restore:
+      pattern: ref
+      save: "previousActiveElement ref on open"
+      restore: "previousActiveElement.focus() on close"
+    initial-focus:
+      pattern: "watch + requestAnimationFrame"
+      details: "Focus first focusable element on open"
+    escape-key:
+      pattern: "document keydown listener"
+      details: "Emits 'close' and 'update:open' events"
+    overlay-click:
+      pattern: "onClick handler on overlay div"
+    conditional-render:
+      pattern: "return null in render when open=false"
+  hooks: [defineComponent, h, ref, computed, watch, onUnmounted, Teleport]
+  internal_deps: [createComponent]
+
+sub_component_specs:
+  ModalHeader:
+    define: "DefineComponent<ModalHeaderProps>"
+    props_mapping:
+      show-close: { name: showClose, type: "Boolean as PropType<boolean>", default: true }
+    content_mapping:
+      default: "<slot />"
+    event_mapping:
+      close: "@close"
+    implementation:
+      strategy: manual
+      details: "Manual defineComponent with computed attrs from core, renders title div and optional close button"
+
+  ModalBody:
+    define: "DefineComponent<ModalBodyProps>"
+    props_mapping:
+      scrollable: { name: scrollable, type: "Boolean as PropType<boolean>", default: true }
+    content_mapping:
+      default: "<slot />"
+    implementation:
+      strategy: manual
+      details: "Manual defineComponent with computed attrs from core"
+
+  ModalFooter:
+    define: "DefineComponent<ModalFooterProps>"
+    props_mapping:
+      align: { name: align, type: "String as PropType<'start' | 'center' | 'end'>", default: "'end'" }
+    content_mapping:
+      default: "<slot />"
+    implementation:
+      strategy: manual
+      details: "Manual defineComponent with computed attrs from core"

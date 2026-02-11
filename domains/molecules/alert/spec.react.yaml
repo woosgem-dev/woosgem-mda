@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+
+props_mapping:
+  variant: { name: variant, type: AlertVariant }
+  status: { name: status, type: AlertStatus }
+  closable: { name: closable, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof AlertStyleProps | 'data-variant' | 'data-status' | 'data-closable' | 'role'>"
+
+content_mapping:
+  icon: ~
+  default: children
+  action: ~
+
+event_mapping:
+  close: onClose
+
+implementation:
+  strategy: factory
+  factory: "createComponent(AlertDef)"
+  internal_deps: [PrefixContext, useId]

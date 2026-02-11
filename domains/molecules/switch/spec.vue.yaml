@@ -1,0 +1,23 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<SwitchProps>"
+
+props_mapping:
+  size: { name: size, type: "String as PropType<SwitchSize>" }
+  color: { name: color, type: "String as PropType<SwitchColor>" }
+  checked: { name: checked, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  toggle: "@click"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SwitchDef)"

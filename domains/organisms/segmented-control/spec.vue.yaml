@@ -1,0 +1,49 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<SegmentedControlProps>"
+  pattern: flat  # Separate component exports, no dot-notation
+
+props_mapping:
+  size: { name: size, type: "String as PropType<SegmentedControlSize>" }
+  full-width: { name: fullWidth, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+  additional:
+    aria-label: { name: "aria-label", type: String }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping: {}
+
+composition_mapping:
+  SegmentedControlItem: "SegmentedControlItem component (separate export)"
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SegmentedControlDef)"
+  notes: |
+    Both components are separate named exports created via the factory.
+    Vue does not use the compound dot-notation pattern.
+  internal_deps: [createComponent]
+
+sub_component_specs:
+  SegmentedControlItem:
+    define: "DefineComponent<SegmentedControlItemProps>"
+    props_mapping:
+      selected: { name: selected, type: Boolean }
+      disabled: { name: disabled, type: Boolean }
+      additional:
+        onClick: { name: onClick, type: "(e: MouseEvent) => void" }
+        type: { name: type, type: "String as PropType<'button' | 'submit' | 'reset'>" }
+    content_mapping:
+      default: "<slot />"
+    event_mapping:
+      select: "@click"
+    implementation:
+      strategy: factory
+      factory: "createComponent(SegmentedControlItemDef)"

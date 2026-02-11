@@ -1,0 +1,27 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLButtonElement
+
+props_mapping:
+  variant: { name: variant, type: ButtonVariant }
+  color: { name: color, type: ButtonColor }
+  size: { name: size, type: ButtonSize }
+  loading: { name: loading, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  full-width: { name: fullWidth, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'button'>, keyof ButtonStyleProps | 'data-variant' | 'data-color' | 'data-size' | 'data-state' | 'data-full-width'>"
+
+content_mapping:
+  default: children
+
+event_mapping:
+  activate: onClick
+
+implementation:
+  strategy: factory
+  factory: "createComponent(ButtonDef, { type: 'button' })"
+  internal_deps: [createComponent]

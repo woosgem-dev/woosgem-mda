@@ -1,0 +1,38 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-tab
+  shadow_dom: false  # Light DOM via createComponent factory
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: "'underline'" }
+  size: { attribute: size, type: String, default: "'md'" }
+  color: { attribute: color, type: String, default: "'primary'" }
+  selected: { attribute: selected, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+  full-width: { attribute: full-width, type: Boolean, default: false }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping:
+  select: "click (suppressed when disabled)"
+
+composition_mapping:
+  TabList: "External — consumer wraps wg-tab elements in a container with role=tablist"
+  TabPanel: "External — consumer manages panel visibility"
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TabCore, 'wg-tab', { props, events })"
+  behaviors:
+    disabled-click-prevention:
+      pattern: "click event handler"
+      details: "Prevents click propagation when disabled=true"
+  internal_deps: [createComponent]
+
+custom_elements:
+  - { tag: wg-tab, class: Tab }

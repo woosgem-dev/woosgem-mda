@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<ButtonProps>"
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<ButtonVariant>" }
+  color: { name: color, type: "String as PropType<ButtonColor>" }
+  size: { name: size, type: "String as PropType<ButtonSize>" }
+  loading: { name: loading, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+  full-width: { name: fullWidth, type: Boolean }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  activate: "@click"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(ButtonDef)"
+  internal_deps: [createComponent]

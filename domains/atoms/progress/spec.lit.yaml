@@ -1,0 +1,28 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-progress
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  variant: { name: variant, type: "{ type: String }" }
+  color: { name: color, type: "{ type: String }" }
+  size: { name: size, type: "{ type: String }" }
+  value: { name: value, type: "{ type: Number }" }
+  max: { name: max, type: "{ type: Number }" }
+  show-label: { name: showLabel, type: "{ type: Boolean }", attribute: show-label }
+
+content_mapping:
+  default: "<slot></slot>"
+
+event_mapping: {}
+
+implementation:
+  strategy: manual
+  pattern: "Custom LitElement with render override for internal sub-elements"
+  internal_deps: [ProgressCore, getProgressPercentage, createComponent]
+  registration: "customElements.define('wg-progress', Progress)"
+  notes: "Lit implementation not yet created in ds-lit. Requires manual render due to internal sub-elements"

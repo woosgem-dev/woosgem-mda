@@ -1,0 +1,25 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+
+props_mapping:
+  size: { name: size, type: AvatarSize }
+  shape: { name: shape, type: AvatarShape }
+  src: { name: src, type: string }
+  alt: { name: alt, type: string }
+  fallback: { name: fallback, type: string }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof AvatarStyleProps | 'data-size' | 'data-shape' | 'data-has-image'>"
+
+content_mapping:
+  default: children
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(AvatarDef)"
+  internal_deps: [createComponent]

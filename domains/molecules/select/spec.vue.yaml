@@ -1,0 +1,35 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<SelectProps>"
+  pattern: flat
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<SelectVariant>" }
+  size: { name: size, type: "String as PropType<SelectSize>" }
+  disabled: { name: disabled, type: Boolean }
+  error: { name: error, type: Boolean }
+  open: { name: open, type: Boolean }
+  multiple: { name: multiple, type: Boolean }
+  model-value: { name: modelValue, type: "[String, Array] as PropType<string | string[]>" }
+
+content_mapping:
+  value: "<slot name='value' />"
+  placeholder: "placeholder prop"
+  icon: "<slot name='icon' />"
+
+event_mapping:
+  toggle: "@click"
+  select-option: "@update:modelValue"
+  close: "@close"
+
+composition_mapping:
+  SelectMenu: SelectMenu
+  SelectOption: SelectOption
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SelectDef)"

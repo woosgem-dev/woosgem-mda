@@ -1,0 +1,64 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<CardProps>"
+  pattern: slots
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<CardVariant>" }
+  padding: { name: padding, type: "String as PropType<CardPadding>" }
+  hoverable: { name: hoverable, type: Boolean }
+  clickable: { name: clickable, type: Boolean }
+  additional:
+    onClick: { name: onClick, type: "(e: MouseEvent) => void" }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping:
+  activate: "@click"
+
+composition_mapping:
+  CardHeader: "CardHeader component (separate export)"
+  CardBody: "CardBody component (separate export)"
+  CardFooter: "CardFooter component (separate export)"
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(CardDef)"
+  internal_deps: [createComponent]
+
+sub_component_specs:
+  CardHeader:
+    define: "DefineComponent<CardHeaderProps>"
+    props_mapping:
+      divider: { name: divider, type: Boolean }
+    content_mapping:
+      default: "<slot />"
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardHeaderDef)"
+
+  CardBody:
+    define: "DefineComponent<CardBodyProps>"
+    props_mapping: {}
+    content_mapping:
+      default: "<slot />"
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardBodyDef)"
+
+  CardFooter:
+    define: "DefineComponent<CardFooterProps>"
+    props_mapping:
+      divider: { name: divider, type: Boolean }
+      align: { name: align, type: "String as PropType<CardFooterAlign>" }
+    content_mapping:
+      default: "<slot />"
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardFooterDef)"

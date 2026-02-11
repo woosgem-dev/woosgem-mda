@@ -1,0 +1,37 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+  pattern: compound
+
+props_mapping:
+  size: { name: size, type: CheckboxSize }
+  checked: { name: checked, type: boolean }
+  indeterminate: { name: indeterminate, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof CheckboxStyleProps | 'data-size' | 'data-state'>"
+
+content_mapping:
+  default: children
+
+event_mapping:
+  toggle: onChange
+
+composition_mapping:
+  CheckboxRoot: CheckboxRoot
+  CheckboxIndicator: CheckboxIndicator
+  CheckboxLabel: CheckboxLabel
+
+implementation:
+  strategy: manual
+  internal_deps: [PrefixContext, useId, CheckboxContext]
+  behaviors:
+    context-provider:
+      pattern: ref
+      description: "CheckboxRoot provides CheckboxContext sharing size, checked, indeterminate, disabled to children"
+    legacy-factory:
+      pattern: callback
+      description: "Legacy single-element Checkbox also available via createComponent(CheckboxDef)"

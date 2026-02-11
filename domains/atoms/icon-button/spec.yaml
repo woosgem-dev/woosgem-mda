@@ -1,69 +1,93 @@
 component:
   name: IconButton
   category: atom
-  description: 아이콘 전용 버튼. 텍스트 없이 아이콘만으로 액션을 나타내는 정사각형/원형 버튼
+  complexity: simple
+  description: Icon-only action button with square or circle shape, without visible text label
 
 semantics:
   tag: button
-  role: button
+  role: implicit
 
 attributes:
   variant:
     type: enum
     values: [filled, outline, ghost]
     default: filled
-    description: 시각적 스타일 변형
+    description: Visual style variant
   color:
     type: enum
     values: [primary, secondary, danger]
     default: primary
-    description: 색상 테마
+    description: Color theme
   size:
     type: enum
     values: [xs, sm, md, lg]
     default: md
-    description: 버튼 크기
+    description: Button size
   shape:
     type: enum
     values: [square, circle]
     default: square
-    description: 버튼 외형. 정사각형 또는 원형
+    description: Button shape (square or circular)
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태
+    description: Disabled state. Prevents interaction when true
 
 content:
   default:
-    description: 아이콘 요소. Icon 컴포넌트 또는 SVG를 배치
+    description: Icon element (Icon component or inline SVG)
     required: true
+    type: node
+    cardinality: single
 
 states:
   disabled:
-    visual: 흐리게(opacity 감소) 표시
-    behavior: 클릭 무시, 포커스 가능
+    visual: Reduced opacity appearance
+    behavior: Click events ignored, element remains focusable
     aria: { disabled: true }
 
 interactions:
   activate:
     triggers: [click, Enter, Space]
-    condition: disabled=false
-    description: 버튼 활성화 액션 실행
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload:
+      event: MouseEvent
+    description: Fires the activation action
 
 accessibility:
   aria:
-    label: "텍스트가 없으므로 반드시 aria-label 제공 필수"
-    disabled: "disabled 상태일 때 native disabled 속성으로 처리"
+    label: "Required. Provides accessible name since no visible text label exists"
+    disabled: "Handled via native disabled attribute"
   keyboard:
     Enter: activate
     Space: activate
-  focus: 기본 포커스 링 표시. disabled 시에도 포커스 가능
+  focus: "Default focus ring displayed. Remains focusable when disabled"
 
 visual_mapping:
   class: icon-btn
   data_attributes:
-    data-variant: variant
-    data-color: color
-    data-size: size
-    data-shape: shape
-    data-state: "disabled일 때 'disabled', 아니면 미존재"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-color:
+      strategy: value-mapped
+      source: color
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-shape:
+      strategy: value-mapped
+      source: shape
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { attr: disabled, eq: true }, value: disabled }
+      fallback: absent
+
+composition:
+  dependencies:
+    atoms: [Icon]

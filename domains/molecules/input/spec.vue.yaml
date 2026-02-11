@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<InputProps>"
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<InputVariant>" }
+  size: { name: size, type: "String as PropType<InputSize>" }
+  error: { name: error, type: Boolean }
+  success: { name: success, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: "@input"
+  focus: "@focus"
+  blur: "@blur"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(InputDef)"

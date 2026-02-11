@@ -1,0 +1,24 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<AvatarProps>"
+
+props_mapping:
+  size: { name: size, type: "String as PropType<AvatarSize>" }
+  shape: { name: shape, type: "String as PropType<AvatarShape>" }
+  src: { name: src, type: String }
+  alt: { name: alt, type: String }
+  fallback: { name: fallback, type: String }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(AvatarDef)"
+  internal_deps: [createComponent]

@@ -1,0 +1,24 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-checkbox
+  shadow_dom: false
+
+props_mapping:
+  size: { attribute: size, type: String, default: md }
+  checked: { attribute: checked, type: Boolean, default: false }
+  indeterminate: { attribute: indeterminate, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+
+content_mapping:
+  default: "<slot>"
+
+event_mapping:
+  toggle: "wg-change (CustomEvent)"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(CheckboxCore, 'wg-checkbox', { props })"
+  registration: "customElements.define('wg-checkbox', Checkbox)"

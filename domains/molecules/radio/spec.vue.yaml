@@ -1,0 +1,28 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<RadioProps>"
+  pattern: flat
+
+props_mapping:
+  size: { name: size, type: "String as PropType<RadioSize>" }
+  color: { name: color, type: "String as PropType<RadioColor>" }
+  checked: { name: checked, type: Boolean }
+  disabled: { name: disabled, type: Boolean }
+
+content_mapping:
+  label: "<slot />"
+
+event_mapping:
+  select: "@click"
+  navigate: "@keydown"
+
+composition_mapping:
+  RadioGroup: RadioGroup
+
+implementation:
+  strategy: factory
+  factory: "createComponent(RadioDef)"

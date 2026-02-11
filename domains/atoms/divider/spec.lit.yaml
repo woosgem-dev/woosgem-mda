@@ -1,0 +1,24 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-divider
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  orientation: { name: orientation, type: "{ type: String }" }
+  variant: { name: variant, type: "{ type: String }" }
+  spacing: { name: spacing, type: "{ type: String }" }
+  color: { name: color, type: "{ type: String }" }
+
+content_mapping: {}
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(DividerCore, 'wg-divider', { props: {...} })"
+  registration: "customElements.define('wg-divider', Divider)"
+  internal_deps: [createComponent]

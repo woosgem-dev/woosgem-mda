@@ -1,0 +1,24 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<AlertProps>"
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<AlertVariant>" }
+  status: { name: status, type: "String as PropType<AlertStatus>" }
+  closable: { name: closable, type: Boolean }
+
+content_mapping:
+  icon: "<slot name='icon' />"
+  default: "<slot />"
+  action: "<slot name='action' />"
+
+event_mapping:
+  close: "@close"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(AlertDef)"

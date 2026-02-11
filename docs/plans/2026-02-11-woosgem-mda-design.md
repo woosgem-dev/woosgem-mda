@@ -4,7 +4,7 @@
 
 - **Date**: 2026-02-11
 - **Status**: draft (브레인스토밍 진행 중)
-- **Deciders**: WooSGem, Thrall
+- **Deciders**: WooSGem
 
 ---
 

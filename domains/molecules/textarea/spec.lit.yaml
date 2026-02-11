@@ -1,0 +1,27 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-textarea
+  shadow_dom: false
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: outline }
+  size: { attribute: size, type: String, default: md }
+  resize: { attribute: resize, type: String, default: vertical }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+  error: { attribute: error, type: Boolean, default: false }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: "input"
+  focus: "focus"
+  blur: "blur"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TextareaCore, 'wg-textarea', { props })"
+  registration: "customElements.define('wg-textarea', Textarea)"

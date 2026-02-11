@@ -1,7 +1,8 @@
 component:
   name: Input
   category: molecule
-  description: 텍스트 입력 필드. 다양한 타입(text, email, password 등)을 지원하는 단일 라인 입력 요소
+  complexity: simple
+  description: Single-line text input field supporting multiple types (text, email, password, etc.) with visual variants and validation states
 
 semantics:
   tag: input
@@ -12,74 +13,108 @@ attributes:
     type: enum
     values: [outline, filled, underline]
     default: outline
-    description: 시각적 스타일 변형
+    description: Visual style variant of the input field
   size:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 입력 필드 크기
+    description: Input field size controlling height and font size
   error:
     type: boolean
     default: false
-    description: 오류 상태 표시. aria-invalid="true"를 자동 설정
+    description: Error validation state. Automatically sets aria-invalid="true"
   success:
     type: boolean
     default: false
-    description: 성공 상태 표시
+    description: Success validation state indicator
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태
+    description: Disabled state preventing user interaction
 
 content:
   default:
-    description: 입력 필드는 자체 닫힘 요소이므로 콘텐츠 영역 없음
+    description: Self-closing element with no content area
     required: false
+    type: text
+    cardinality: single
 
 states:
   error:
-    visual: 테두리 및 포커스 링이 오류 색상으로 변경
-    behavior: 입력 가능하나 유효성 검사 실패 상태 표시
+    visual: Border and focus ring change to error color
+    behavior: Input remains enabled but displays validation failure
     aria: { invalid: "true" }
   success:
-    visual: 테두리 및 포커스 링이 성공 색상으로 변경
-    behavior: 정상 입력 가능
+    visual: Border and focus ring change to success color
+    behavior: Normal input behavior with success indication
     aria: {}
   disabled:
-    visual: 흐리게 표시, 커서 변경
-    behavior: 입력 불가, 포커스 불가
+    visual: Reduced opacity, cursor changes to not-allowed
+    behavior: Input blocked, focus blocked
     aria: { disabled: true }
 
 interactions:
   input:
     triggers: [keyboard]
-    condition: disabled=false
-    description: 텍스트 입력
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload:
+      value: string
+    description: Text value changes via keyboard input
   focus:
     triggers: [click, Tab]
-    condition: disabled=false
-    description: 입력 필드에 포커스
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload: {}
+    description: Input field receives focus
   blur:
     triggers: [Tab, click-outside]
-    condition: 포커스 상태일 때
-    description: 입력 필드에서 포커스 해제
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: emit
+    payload: {}
+    description: Input field loses focus
 
 accessibility:
   aria:
-    invalid: "error=true일 때 'true'"
-    describedby: "오류/도움말 텍스트 요소와 연결"
-    label: "연관된 label 요소 또는 aria-label 필수"
+    invalid: "Set to 'true' when error=true"
+    describedby: "Links to error/help text element"
+    label: "Requires associated label element or aria-label"
   keyboard:
-    Tab: 포커스 이동
-  focus: 기본 포커스 링 표시, variant에 따라 스타일 변경
-  notes:
-    - id 속성으로 label의 for 연결 필수
-    - name 속성으로 폼 제출 지원
-    - aria-describedby로 오류/도움말 텍스트 연결 권장
+    Tab: focus
+  focus: Default focus ring displayed, style varies by variant
 
 visual_mapping:
   class: input
   data_attributes:
-    data-variant: variant
-    data-size: size
-    data-state: "error > success > disabled > undefined (우선순위)"
+    data-variant:
+      strategy: value-mapped
+      source: variant
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { attr: error, eq: true }, value: error }
+        - { when: { attr: success, eq: true }, value: success }
+        - { when: { attr: disabled, eq: true }, value: disabled }
+      fallback: absent
+
+control:
+  mode: both
+  value:
+    type: string
+    description: Current text value of the input field
+  default_value:
+    type: string
+    description: Initial text value for uncontrolled usage
+  on_change:
+    payload:
+      value: string
+    description: Fired when input value changes

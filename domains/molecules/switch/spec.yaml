@@ -1,7 +1,8 @@
 component:
   name: Switch
   category: molecule
-  description: 토글 스위치. 켜기/끄기의 즉각적인 상태 전환을 위한 요소
+  complexity: simple
+  description: Toggle switch for immediate on/off state transitions. Track and thumb elements are CSS-generated with no content slots
 
 semantics:
   tag: button
@@ -12,64 +13,92 @@ attributes:
     type: enum
     values: [sm, md, lg]
     default: md
-    description: 스위치 크기
+    description: Switch component size controlling track and thumb dimensions
   color:
     type: enum
     values: [primary, secondary, success]
     default: primary
-    description: 스위치 활성 상태의 색상 테마
+    description: Color theme applied to the active (checked) track state
   checked:
     type: boolean
     default: false
-    description: 켜짐(on) 상태
+    description: On/off toggle state
   disabled:
     type: boolean
     default: false
-    description: 비활성화 상태
+    description: Disabled state preventing user interaction
 
 content:
   default:
-    description: 스위치는 자체 닫힘 요소로 콘텐츠 영역 없음 (트랙과 썸은 CSS로 생성)
+    description: Self-contained element with no content slots (track and thumb rendered via CSS pseudo-elements)
     required: false
+    type: text
+    cardinality: single
 
 states:
   unchecked:
-    visual: 트랙 비활성 색상, 썸(thumb)이 왼쪽에 위치
-    behavior: 클릭 시 checked 상태로 전환
+    visual: Track shows inactive color, thumb positioned on the left
+    behavior: Click transitions to checked state
     aria: { checked: false }
   checked:
-    visual: 트랙 활성 색상(color 속성), 썸이 오른쪽으로 이동
-    behavior: 클릭 시 unchecked 상태로 전환
+    visual: Track shows active color (color attribute), thumb positioned on the right
+    behavior: Click transitions to unchecked state
     aria: { checked: true }
   disabled:
-    visual: 흐리게 표시
-    behavior: 클릭 및 상호작용 불가
+    visual: Reduced opacity
+    behavior: All click and keyboard interaction blocked
     aria: { disabled: true }
   checked-disabled:
-    visual: 활성 색상이나 흐리게 표시, 썸 오른쪽
-    behavior: 상호작용 불가하나 켜짐 상태 유지
+    visual: Active color track with reduced opacity, thumb on the right
+    behavior: Interaction blocked but on state preserved
     aria: { checked: true, disabled: true }
 
 interactions:
   toggle:
     triggers: [click, Enter, Space]
-    condition: disabled=false
-    description: 스위치 상태 토글 (켜기/끄기)
+    condition:
+      all:
+        - { attr: disabled, eq: false }
+    effect: toggle
+    description: Toggle switch between on and off states
 
 accessibility:
   aria:
-    checked: "checked 상태에 따라 true/false"
-    disabled: "disabled=true일 때"
-    label: "aria-label 또는 연관된 레이블 텍스트 필수"
+    checked: "Reflects checked state as true/false"
+    disabled: "Set when disabled=true"
+    label: "Requires aria-label or associated label text"
   keyboard:
-    Enter: 스위치 토글
-    Space: 스위치 토글
-    Tab: 포커스 이동
-  focus: 포커스 링 표시
+    Enter: toggle
+    Space: toggle
+    Tab: "Move focus to/from switch"
+  focus: Focus ring displayed around the switch track
 
 visual_mapping:
   class: switch
   data_attributes:
-    data-size: size
-    data-color: color
-    data-state: "checked+disabled='checked-disabled' > checked > disabled > undefined (우선순위)"
+    data-size:
+      strategy: value-mapped
+      source: size
+    data-color:
+      strategy: value-mapped
+      source: color
+    data-state:
+      strategy: priority-enum
+      priority:
+        - { when: { all: [{ attr: checked, eq: true }, { attr: disabled, eq: true }] }, value: checked-disabled }
+        - { when: { attr: checked, eq: true }, value: checked }
+        - { when: { attr: disabled, eq: true }, value: disabled }
+      fallback: absent
+
+control:
+  mode: both
+  value:
+    type: boolean
+    description: Current on/off state of the switch
+  default_value:
+    type: boolean
+    description: Initial on/off state for uncontrolled usage
+  on_change:
+    payload:
+      checked: boolean
+    description: Fired when switch state toggles

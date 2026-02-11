@@ -1,0 +1,70 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLDivElement
+  pattern: compound  # Card, CardHeader, CardBody, CardFooter
+
+props_mapping:
+  variant: { name: variant, type: CardVariant }
+  padding: { name: padding, type: CardPadding }
+  hoverable: { name: hoverable, type: boolean }
+  clickable: { name: clickable, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'div'>, keyof CardStyleProps | 'data-variant' | 'data-padding' | 'data-hoverable' | 'data-clickable'>"
+  additional:
+    onClick: { type: "(e: MouseEvent<HTMLDivElement>) => void", description: "Click handler for clickable cards" }
+    onKeyDown: { type: "(e: KeyboardEvent<HTMLDivElement>) => void", description: "Keydown handler for clickable cards (Enter/Space)" }
+
+content_mapping:
+  default: children
+
+event_mapping:
+  activate: onClick
+
+composition_mapping:
+  CardHeader: CardHeader
+  CardBody: CardBody
+  CardFooter: CardFooter
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(CardDef, {})"
+  hooks: []
+  internal_deps: [createComponent]
+
+sub_component_specs:
+  CardHeader:
+    ref: HTMLDivElement
+    props_mapping:
+      divider: { name: divider, type: boolean }
+      native: "Omit<ComponentPropsWithoutRef<'div'>, keyof CardHeaderStyleProps | 'data-divider'>"
+    content_mapping:
+      default: children
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardHeaderDef, {})"
+
+  CardBody:
+    ref: HTMLDivElement
+    props_mapping:
+      native: "CardBodyStyleProps & ComponentPropsWithoutRef<'div'>"
+    content_mapping:
+      default: children
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardBodyDef, {})"
+
+  CardFooter:
+    ref: HTMLDivElement
+    props_mapping:
+      divider: { name: divider, type: boolean }
+      align: { name: align, type: CardFooterAlign }
+      native: "Omit<ComponentPropsWithoutRef<'div'>, keyof CardFooterStyleProps | 'data-divider' | 'data-align'>"
+    content_mapping:
+      default: children
+    implementation:
+      strategy: factory
+      factory: "createComponent(CardFooterDef, {})"

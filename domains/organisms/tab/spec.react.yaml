@@ -1,0 +1,39 @@
+extends: ./spec.yaml
+framework: react
+target: ">=18"
+
+component:
+  export: named
+  ref: HTMLButtonElement
+  pattern: flat  # Tab is a single button element; TabList/TabPanel are consumed externally
+
+props_mapping:
+  variant: { name: variant, type: TabVariant }
+  size: { name: size, type: TabSize }
+  color: { name: color, type: TabColor }
+  selected: { name: selected, type: boolean }
+  disabled: { name: disabled, type: boolean }
+  full-width: { name: fullWidth, type: boolean }
+  native: "Omit<ComponentPropsWithoutRef<'button'>, keyof TabStyleProps | 'data-variant' | 'data-size' | 'data-state' | 'data-full-width' | 'role' | 'aria-selected'>"
+
+content_mapping:
+  default: children
+
+event_mapping:
+  select: onClick
+
+composition_mapping:
+  TabList: "External — consumer wraps Tab items in a div with role=tablist"
+  TabPanel: "External — consumer manages TabPanel visibility"
+  rendering: inline
+
+implementation:
+  strategy: factory
+  factory: "createComponent(TabDef)"
+  notes: |
+    The Tab component in React is a single button element produced by the factory.
+    TabList and TabPanel wrappers are the consumer's responsibility.
+    Roving tabindex and arrow key navigation must be implemented by the consumer
+    or a future TabGroup wrapper component.
+  hooks: []
+  internal_deps: [createComponent]

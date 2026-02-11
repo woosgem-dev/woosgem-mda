@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: vue
+target: ">=3.4"
+
+component:
+  export: named
+  define: "DefineComponent<ProgressProps>"
+
+props_mapping:
+  variant: { name: variant, type: "String as PropType<ProgressVariant>" }
+  color: { name: color, type: "String as PropType<ProgressColor>" }
+  size: { name: size, type: "String as PropType<ProgressSize>" }
+  value: { name: value, type: Number }
+  max: { name: max, type: Number }
+  show-label: { name: showLabel, type: Boolean }
+
+content_mapping:
+  default: "<slot />"
+
+event_mapping: {}
+
+implementation:
+  strategy: manual
+  pattern: "defineComponent with computed attrs and inline sub-elements"
+  internal_deps: [ProgressDef, getProgressPercentage]
+  notes: "Vue implementation not yet created in ds-vue. Requires manual implementation due to internal sub-elements"

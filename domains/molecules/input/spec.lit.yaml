@@ -1,0 +1,27 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-input
+  shadow_dom: false
+
+props_mapping:
+  variant: { attribute: variant, type: String, default: outline }
+  size: { attribute: size, type: String, default: md }
+  error: { attribute: error, type: Boolean, default: false }
+  success: { attribute: success, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+
+content_mapping:
+  default: ~
+
+event_mapping:
+  input: "input"
+  focus: "focus"
+  blur: "blur"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(InputCore, 'wg-input', { props })"
+  registration: "customElements.define('wg-input', Input)"

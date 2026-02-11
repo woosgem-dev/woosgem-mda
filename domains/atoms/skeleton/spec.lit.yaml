@@ -1,0 +1,26 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-skeleton
+  shadow_dom: false
+  reason: "External SCSS stylesheet dependency"
+
+props_mapping:
+  variant: { name: variant, type: "{ type: String }" }
+  size: { name: size, type: "{ type: String }" }
+  animation: { name: animation, type: "{ type: String }" }
+  width: { name: width, type: "{ type: String }" }
+  height: { name: height, type: "{ type: String }" }
+
+content_mapping: {}
+
+event_mapping: {}
+
+implementation:
+  strategy: factory
+  factory: "createComponent(SkeletonCore, 'wg-skeleton', { props: {...} })"
+  registration: "customElements.define('wg-skeleton', Skeleton)"
+  internal_deps: [createComponent]
+  notes: "Lit implementation not yet created in ds-lit"

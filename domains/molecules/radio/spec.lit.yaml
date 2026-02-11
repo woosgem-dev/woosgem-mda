@@ -1,0 +1,34 @@
+extends: ./spec.yaml
+framework: lit
+target: ">=3"
+
+component:
+  tag_name: wg-radio
+  shadow_dom: false
+
+props_mapping:
+  size: { attribute: size, type: String, default: md }
+  color: { attribute: color, type: String, default: primary }
+  checked: { attribute: checked, type: Boolean, default: false }
+  disabled: { attribute: disabled, type: Boolean, default: false }
+
+content_mapping:
+  label: '<slot name="label">'
+
+event_mapping:
+  select: "click"
+  navigate: "keydown"
+
+composition_mapping:
+  RadioGroup:
+    tag_name: wg-radio-group
+    registration: "customElements.define('wg-radio-group', RadioGroup)"
+
+implementation:
+  strategy: factory
+  factory: "createComponent(RadioCore, 'wg-radio', { props, events })"
+  registration: "customElements.define('wg-radio', Radio)"
+  behaviors:
+    disabled-click-guard:
+      pattern: callback
+      description: "Prevents click propagation when disabled=true"
