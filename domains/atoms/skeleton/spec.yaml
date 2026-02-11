@@ -1,0 +1,54 @@
+component:
+  name: Skeleton
+  category: atom
+  description: 로딩 플레이스홀더. 콘텐츠가 로드되기 전 레이아웃 형태를 미리 보여주는 뼈대 요소
+
+semantics:
+  tag: div
+  role: none
+
+attributes:
+  variant:
+    type: enum
+    values: [text, circular, rectangular]
+    default: text
+    description: "플레이스홀더 형태 (text: 텍스트 줄, circular: 원형, rectangular: 사각형)"
+  size:
+    type: enum
+    values: [sm, md, lg, full]
+    default: md
+    description: 플레이스홀더 크기. full은 컨테이너 전체 크기
+  animation:
+    type: enum
+    values: [pulse, wave, none]
+    default: pulse
+    description: "애니메이션 유형 (pulse: 깜빡임, wave: 파도 효과, none: 정적)"
+  width:
+    type: string
+    default: undefined
+    description: 커스텀 너비. 숫자(px 단위) 또는 CSS 값 문자열
+  height:
+    type: string
+    default: undefined
+    description: 커스텀 높이. 숫자(px 단위) 또는 CSS 값 문자열
+
+content: {}
+
+states: {}
+
+interactions: {}
+
+accessibility:
+  aria:
+    busy: "항상 true. 콘텐츠 로딩 중임을 전달"
+    live: "polite. 콘텐츠 변경 시 스크린 리더에 알림"
+  keyboard: {}
+  focus: 포커스 불가 (플레이스홀더 전용)
+
+visual_mapping:
+  class: skeleton
+  data_attributes:
+    data-variant: variant
+    data-size: size
+    data-animation: animation
+  inline_style: "width/height가 지정되면 인라인 스타일로 적용 (숫자는 px 단위 자동 변환)"

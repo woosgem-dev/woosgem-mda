@@ -1,0 +1,65 @@
+domain:
+  name: molecules
+  purpose: Atom 조합으로 단일 기능을 수행하는 요소
+  status: active
+  depends_on: [atoms]
+
+components:
+  input:
+    name: Input
+    status: stable
+    spec: input/spec.yaml
+  textarea:
+    name: Textarea
+    status: stable
+    spec: textarea/spec.yaml
+  select:
+    name: Select
+    status: stable
+    spec: select/spec.yaml
+    sub_components: [SelectMenu, SelectOption]
+  checkbox:
+    name: Checkbox
+    status: stable
+    spec: checkbox/spec.yaml
+    sub_components: [CheckboxRoot, CheckboxIndicator, CheckboxLabel]
+  radio:
+    name: Radio
+    status: stable
+    spec: radio/spec.yaml
+    sub_components: [RadioGroup]
+  switch:
+    name: Switch
+    status: stable
+    spec: switch/spec.yaml
+  alert:
+    name: Alert
+    status: stable
+    spec: alert/spec.yaml
+  tooltip:
+    name: Tooltip
+    status: stable
+    spec: tooltip/spec.yaml
+  list-item:
+    name: ListItem
+    status: stable
+    spec: list-item/spec.yaml
+
+contracts:
+  path: contracts/index.ts
+  description: 전체 molecules 도메인의 public API
+  exports:
+    types:
+      - InputVariant, InputSize
+      - TextareaVariant, TextareaSize, TextareaResize
+      - SelectVariant, SelectSize, SelectOption
+      - CheckboxSize, CheckboxState
+      - RadioSize, RadioColor
+      - SwitchSize, SwitchColor
+      - AlertVariant, AlertStatus
+      - TooltipPosition, TooltipTrigger
+      - ListItemVariant
+    components:
+      react: [Input, Textarea, Select, SelectMenu, SelectOption, Checkbox, CheckboxRoot, CheckboxIndicator, CheckboxLabel, Radio, RadioGroup, Switch, Alert, Tooltip, ListItem]
+      vue: [Input, Textarea, Select, SelectMenu, SelectOption, Checkbox, CheckboxRoot, CheckboxIndicator, CheckboxLabel, Radio, RadioGroup, Switch, Alert, Tooltip, ListItem]
+      lit: [wg-input, wg-textarea, wg-select, wg-select-menu, wg-select-option, wg-checkbox, wg-checkbox-root, wg-checkbox-indicator, wg-checkbox-label, wg-radio, wg-radio-group, wg-switch, wg-alert, wg-tooltip, wg-list-item]

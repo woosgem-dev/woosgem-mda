@@ -1,0 +1,77 @@
+component:
+  name: ListItem
+  category: molecule
+  description: 리스트 아이템. 목록 내 개별 항목을 표현하는 요소. 정적 표시 또는 인터랙티브 동작 지원
+
+semantics:
+  tag: li
+  role: listitem
+
+attributes:
+  variant:
+    type: enum
+    values: [default, interactive]
+    default: default
+    description: "동작 유형. default는 정적 표시, interactive는 호버/클릭 가능"
+  selected:
+    type: boolean
+    default: false
+    description: 선택 상태
+  disabled:
+    type: boolean
+    default: false
+    description: 비활성화 상태
+  divider:
+    type: boolean
+    default: false
+    description: 하단 구분선 표시 여부
+
+content:
+  default:
+    description: 리스트 아이템 콘텐츠 (텍스트, 아이콘, 보조 정보 등)
+    required: true
+
+states:
+  default:
+    visual: 기본 표시
+    behavior: variant=default이면 정적, variant=interactive이면 호버 효과
+    aria: {}
+  selected:
+    visual: 선택 상태 배경색/하이라이트
+    behavior: 선택됨 표시
+    aria: { selected: true }
+  disabled:
+    visual: 흐리게 표시
+    behavior: 클릭 및 상호작용 불가
+    aria: { disabled: true }
+
+interactions:
+  select:
+    triggers: [click, Enter, Space]
+    condition: variant=interactive AND disabled=false
+    description: 아이템 선택/활성화
+  hover:
+    triggers: [mouseenter]
+    condition: variant=interactive AND disabled=false
+    description: 호버 시 시각적 피드백
+
+accessibility:
+  aria:
+    selected: "selected=true일 때"
+    disabled: "disabled=true일 때"
+  keyboard:
+    Enter: "variant=interactive일 때 아이템 활성화"
+    Space: "variant=interactive일 때 아이템 활성화"
+    ArrowDown: "목록 내 다음 아이템으로 포커스 이동"
+    ArrowUp: "목록 내 이전 아이템으로 포커스 이동"
+  focus: variant=interactive일 때 포커스 링 표시
+  notes:
+    - 부모 요소에 role=list (ul/ol) 필요
+    - variant=interactive일 때 tabindex=0 또는 roving tabindex 패턴 적용
+
+visual_mapping:
+  class: list-item
+  data_attributes:
+    data-variant: variant
+    data-state: "selected > disabled > undefined (우선순위)"
+    data-divider: "divider=true일 때 존재"

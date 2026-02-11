@@ -1,0 +1,130 @@
+component:
+  name: Card
+  category: organism
+  description: 관련 콘텐츠를 묶어 표시하는 컨테이너. Header/Body/Footer 영역으로 구성되며, 클릭 가능한 카드로도 사용할 수 있다.
+
+semantics:
+  tag: div
+  role: null
+  role_conditional:
+    clickable: button
+
+attributes:
+  variant:
+    type: enum
+    values: [outlined, elevated, filled]
+    default: outlined
+    description: 카드의 시각적 스타일. outlined는 테두리, elevated는 그림자, filled는 배경색으로 영역을 구분한다.
+  padding:
+    type: enum
+    values: [none, sm, md, lg]
+    default: md
+    description: 카드 내부 여백 크기.
+  hoverable:
+    type: boolean
+    default: false
+    description: 호버 시 시각적 피드백(그림자 또는 배경 변화) 표시 여부. clickable이 true이면 자동으로 true가 된다.
+  clickable:
+    type: boolean
+    default: false
+    description: 카드 전체를 클릭 가능한 버튼으로 동작시킬지 여부. true이면 role=button과 tabIndex=0이 부여된다.
+
+composition:
+  regions:
+    header:
+      component: CardHeader
+      tag: div
+      description: 카드 상단 영역. 제목, 아이콘, 액션 등을 배치한다.
+      required: false
+      attributes:
+        divider:
+          type: boolean
+          default: false
+          description: 헤더 아래 구분선 표시 여부.
+      content:
+        default:
+          description: 헤더 콘텐츠 (제목, 부제목, 액션 버튼 등).
+          required: true
+      visual_mapping:
+        class: card-header
+        data_attributes:
+          data-divider: "divider가 true일 때 존재"
+    body:
+      component: CardBody
+      tag: div
+      description: 카드의 주요 콘텐츠 영역.
+      required: true
+      attributes: {}
+      content:
+        default:
+          description: 본문 콘텐츠.
+          required: true
+      visual_mapping:
+        class: card-body
+    footer:
+      component: CardFooter
+      tag: div
+      description: 카드 하단 영역. 액션 버튼, 링크 등을 배치한다.
+      required: false
+      attributes:
+        divider:
+          type: boolean
+          default: false
+          description: 푸터 위 구분선 표시 여부.
+        align:
+          type: enum
+          values: [start, center, end, between]
+          default: start
+          description: 푸터 내부 콘텐츠 정렬 방향. between은 양 끝 정렬.
+      content:
+        default:
+          description: 푸터 콘텐츠 (버튼, 링크 등).
+          required: true
+      visual_mapping:
+        class: card-footer
+        data_attributes:
+          data-divider: "divider가 true일 때 존재"
+          data-align: align
+  rendering:
+    strategy: inline
+    description: DOM 흐름에 따라 인라인으로 렌더링된다.
+
+content:
+  default:
+    description: CardHeader, CardBody, CardFooter 서브컴포넌트를 배치하는 영역.
+    required: true
+
+states:
+  idle:
+    visual: 기본 카드 외형 표시.
+    behavior: 일반 콘텐츠 컨테이너로 동작.
+  hovered:
+    visual: hoverable=true일 때 그림자 또는 배경 변화로 호버 피드백.
+    behavior: 커서가 pointer로 변경 (clickable=true일 때).
+  focused:
+    visual: clickable=true일 때 포커스 링 표시.
+    behavior: Enter/Space로 활성화 가능.
+    aria:
+      role: button
+
+interactions:
+  activate:
+    triggers: [click, Enter, Space]
+    condition: clickable=true
+    description: 클릭 가능한 카드를 활성화한다.
+
+accessibility:
+  aria:
+    role: "clickable=true일 때 button, 아니면 기본 div"
+  keyboard:
+    Enter: "clickable=true일 때 activate"
+    Space: "clickable=true일 때 activate"
+  focus: clickable=true일 때 tabIndex=0으로 포커스 가능. 포커스 링 표시.
+
+visual_mapping:
+  class: card
+  data_attributes:
+    data-variant: variant
+    data-padding: padding
+    data-hoverable: "hoverable 또는 clickable이 true일 때 존재"
+    data-clickable: "clickable이 true일 때 존재"

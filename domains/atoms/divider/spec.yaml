@@ -1,0 +1,51 @@
+component:
+  name: Divider
+  category: atom
+  description: 시각적 구분선. 콘텐츠 섹션 사이를 수평 또는 수직으로 구분하는 선
+
+semantics:
+  tag: hr
+  role: separator
+
+attributes:
+  orientation:
+    type: enum
+    values: [horizontal, vertical]
+    default: horizontal
+    description: 구분선 방향
+  variant:
+    type: enum
+    values: [solid, dashed]
+    default: solid
+    description: 선 스타일
+  spacing:
+    type: enum
+    values: [none, sm, md, lg]
+    default: md
+    description: 구분선 위아래(또는 좌우) 여백
+  color:
+    type: enum
+    values: [default, muted, primary, secondary, danger, success]
+    default: default
+    description: 선 색상
+
+content: {}
+
+states: {}
+
+interactions: {}
+
+accessibility:
+  aria:
+    role: "separator 역할 (hr 태그의 암시적 역할)"
+    orientation: "orientation 속성값이 aria-orientation으로 매핑"
+  keyboard: {}
+  focus: 포커스 불가 (장식적 구분 요소)
+
+visual_mapping:
+  class: divider
+  data_attributes:
+    data-orientation: orientation
+    data-variant: variant
+    data-spacing: spacing
+    data-color: color

@@ -1,0 +1,134 @@
+component:
+  name: Tab
+  category: organism
+  description: 탭 기반 콘텐츠 전환 인터페이스. 탭 목록(TabList)과 탭 패널(TabPanel)로 구성되며, 선택된 탭에 해당하는 패널만 표시한다.
+
+semantics:
+  tag: button
+  role: tab
+
+attributes:
+  variant:
+    type: enum
+    values: [underline, filled]
+    default: underline
+    description: 탭의 시각적 스타일. underline은 하단 밑줄, filled는 배경 채움.
+  size:
+    type: enum
+    values: [sm, md, lg]
+    default: md
+    description: 탭의 크기.
+  color:
+    type: enum
+    values: [primary, secondary]
+    default: primary
+    description: 탭의 색상 테마.
+  selected:
+    type: boolean
+    default: false
+    description: 현재 탭이 선택된 상태인지 여부.
+  disabled:
+    type: boolean
+    default: false
+    description: 탭 비활성화 여부. 비활성화된 탭은 클릭할 수 없다.
+  full-width:
+    type: boolean
+    default: false
+    description: 탭이 부모 컨테이너 너비를 균등하게 분할하여 차지할지 여부.
+
+composition:
+  regions:
+    tab-list:
+      description: 탭 버튼들이 나열되는 목록 컨테이너. role=tablist를 가진다.
+      required: true
+      semantics:
+        tag: div
+        role: tablist
+      content:
+        default:
+          description: 개별 Tab 항목들의 나열.
+          required: true
+    tab-panel:
+      description: 선택된 탭에 해당하는 콘텐츠 패널. role=tabpanel을 가진다.
+      required: true
+      semantics:
+        tag: div
+        role: tabpanel
+      content:
+        default:
+          description: 패널 콘텐츠. 선택된 탭에 대응하는 패널만 표시된다.
+          required: true
+      accessibility:
+        aria:
+          labelledby: "대응하는 Tab 항목의 id"
+          hidden: "선택되지 않은 패널은 true"
+  rendering:
+    strategy: inline
+    description: DOM 흐름에 따라 인라인으로 렌더링된다.
+
+content:
+  default:
+    description: 탭 버튼의 레이블 텍스트 또는 아이콘.
+    required: true
+
+states:
+  selected:
+    visual: 활성 탭 강조 표시. underline 변형은 하단 밑줄, filled 변형은 배경 채움.
+    behavior: 대응하는 패널이 표시된다.
+    aria:
+      selected: true
+  unselected:
+    visual: 비활성 탭 기본 스타일.
+    behavior: 대응하는 패널이 숨겨진다.
+    aria:
+      selected: false
+  disabled:
+    visual: 흐리게 표시. 커서가 not-allowed로 변경.
+    behavior: 클릭 무시. 포커스는 가능하나 활성화 불가.
+    aria:
+      disabled: true
+
+interactions:
+  select:
+    triggers: [click, Enter, Space]
+    condition: disabled=false
+    description: 탭을 선택하여 대응 패널을 표시한다.
+  navigate-next:
+    triggers: [ArrowRight, ArrowDown]
+    condition: 탭 목록에 포커스가 있을 때
+    description: 다음 활성 탭으로 포커스 이동.
+  navigate-prev:
+    triggers: [ArrowLeft, ArrowUp]
+    condition: 탭 목록에 포커스가 있을 때
+    description: 이전 활성 탭으로 포커스 이동.
+  navigate-first:
+    triggers: [Home]
+    condition: 탭 목록에 포커스가 있을 때
+    description: 첫 번째 활성 탭으로 포커스 이동.
+  navigate-last:
+    triggers: [End]
+    condition: 탭 목록에 포커스가 있을 때
+    description: 마지막 활성 탭으로 포커스 이동.
+
+accessibility:
+  aria:
+    selected: "선택된 탭에 true"
+    disabled: "비활성 탭에 true"
+    controls: "탭이 제어하는 패널의 id"
+  keyboard:
+    Enter: "현재 포커스된 탭 선택"
+    Space: "현재 포커스된 탭 선택"
+    ArrowRight: "다음 탭으로 포커스 이동 (비활성 탭 건너뜀)"
+    ArrowLeft: "이전 탭으로 포커스 이동 (비활성 탭 건너뜀)"
+    Home: "첫 번째 탭으로 포커스 이동"
+    End: "마지막 탭으로 포커스 이동"
+  focus: 탭 목록 내에서 로빙 탭인덱스(roving tabindex) 패턴 적용. 선택된 탭만 tabIndex=0, 나머지는 tabIndex=-1.
+
+visual_mapping:
+  class: tab
+  data_attributes:
+    data-variant: variant
+    data-size: size
+    data-color: color
+    data-state: "selected > disabled > undefined (우선순위)"
+    data-full-width: "full-width가 true일 때 존재"

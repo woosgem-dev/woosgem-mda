@@ -1,5 +1,7 @@
 # WooSGem MDA
 
+한국어 | **[English](./README.en.md)**
+
 > Spec-driven Multi-framework Design System
 
 MDA(Manifest-Driven Architecture)를 적용한 디자인 시스템. **스펙이 소스**이고, 코드는 파생물이다.

@@ -1,0 +1,192 @@
+component:
+  name: Select
+  category: molecule
+  description: 드롭다운 선택 컴포넌트. 트리거 버튼, 메뉴(listbox), 옵션으로 구성. 단일/다중 선택 지원
+
+semantics:
+  tag: button
+  role: combobox
+
+attributes:
+  variant:
+    type: enum
+    values: [outline, filled]
+    default: outline
+    description: 트리거 버튼의 시각적 스타일
+  size:
+    type: enum
+    values: [sm, md, lg]
+    default: md
+    description: Select 컴포넌트 크기
+  disabled:
+    type: boolean
+    default: false
+    description: 비활성화 상태
+  error:
+    type: boolean
+    default: false
+    description: 오류 상태 표시
+  open:
+    type: boolean
+    default: false
+    description: 드롭다운 메뉴 열림 여부
+  multiple:
+    type: boolean
+    default: false
+    description: 다중 선택 허용 여부
+
+composition:
+  regions:
+    trigger:
+      tag: button
+      description: 드롭다운을 여는 트리거 버튼. 선택된 값, 플레이스홀더, 아이콘을 표시
+      required: true
+    menu:
+      tag: ul
+      description: 옵션 목록을 담는 드롭다운 리스트박스 컨테이너
+      required: true
+    option:
+      tag: li
+      description: 개별 선택 옵션 항목
+      required: true
+
+content:
+  value:
+    description: 선택된 값 텍스트 표시 영역
+    required: false
+  placeholder:
+    description: 값이 선택되지 않았을 때 표시되는 안내 텍스트
+    required: false
+  icon:
+    description: 드롭다운 화살표 아이콘
+    required: false
+
+states:
+  open:
+    visual: 드롭다운 메뉴 표시, 트리거 버튼 활성 스타일
+    behavior: 옵션 탐색 및 선택 가능
+    aria: { expanded: true }
+  closed:
+    visual: 드롭다운 메뉴 숨김
+    behavior: 트리거 클릭/키보드로 열기 가능
+    aria: { expanded: false }
+  error:
+    visual: 테두리가 오류 색상으로 변경
+    behavior: 정상 동작하나 유효성 검사 실패 표시
+    aria: {}
+  disabled:
+    visual: 흐리게 표시
+    behavior: 클릭 및 키보드 상호작용 불가
+    aria: { disabled: true }
+
+interactions:
+  toggle:
+    triggers: [click, Enter, Space]
+    condition: disabled=false
+    description: 드롭다운 메뉴 열기/닫기 토글
+  select-option:
+    triggers: [click, Enter]
+    condition: open=true AND option.disabled=false
+    description: 옵션 선택
+  navigate:
+    triggers: [ArrowUp, ArrowDown]
+    condition: open=true
+    description: 옵션 간 이동 (하이라이트)
+  close:
+    triggers: [Escape, Tab, click-outside]
+    condition: open=true
+    description: 드롭다운 메뉴 닫기
+
+accessibility:
+  aria:
+    expanded: "open 상태에 따라 true/false"
+    haspopup: "listbox"
+    disabled: "disabled=true일 때"
+    selected: "각 옵션의 선택 상태"
+    multiselectable: "multiple=true일 때 listbox에 설정"
+  keyboard:
+    Enter: "닫힌 상태에서 열기, 열린 상태에서 하이라이트된 옵션 선택"
+    Space: "닫힌 상태에서 열기, 열린 상태에서 하이라이트된 옵션 선택"
+    ArrowDown: "다음 옵션으로 하이라이트 이동"
+    ArrowUp: "이전 옵션으로 하이라이트 이동"
+    Escape: "드롭다운 닫기, 트리거에 포커스 복귀"
+    Tab: "드롭다운 닫기, 다음 요소로 포커스 이동"
+    Home: "첫 번째 옵션으로 이동"
+    End: "마지막 옵션으로 이동"
+  focus: 트리거 버튼에 포커스 링 표시. 열릴 때 첫 번째(또는 선택된) 옵션으로 포커스 이동
+
+# --- Select 트리거 (기본 컴포넌트) ---
+visual_mapping:
+  class: select
+  data_attributes:
+    data-variant: variant
+    data-size: size
+    data-state: "disabled > error > open > undefined (우선순위)"
+    data-multiple: "multiple=true일 때 존재"
+
+# --- 서브컴포넌트 ---
+sub_components:
+  select-menu:
+    component:
+      name: SelectMenu
+      description: 옵션 목록을 담는 드롭다운 리스트박스 컨테이너
+    semantics:
+      tag: ul
+      role: listbox
+    attributes:
+      size:
+        type: enum
+        values: [sm, md, lg]
+        default: md
+        description: 메뉴 크기 (트리거와 동일하게 설정)
+      open:
+        type: boolean
+        default: false
+        description: 메뉴 표시 여부
+      multiple:
+        type: boolean
+        default: false
+        description: 다중 선택 모드
+    visual_mapping:
+      class: select-menu
+      data_attributes:
+        data-size: size
+        data-state: "open=true이면 'open', 아니면 undefined"
+
+  select-option:
+    component:
+      name: SelectOption
+      description: 개별 선택 옵션 항목
+    semantics:
+      tag: li
+      role: option
+    attributes:
+      size:
+        type: enum
+        values: [sm, md, lg]
+        default: md
+        description: 옵션 크기
+      selected:
+        type: boolean
+        default: false
+        description: 선택 상태
+      disabled:
+        type: boolean
+        default: false
+        description: 비활성화 상태
+      highlighted:
+        type: boolean
+        default: false
+        description: 키보드 탐색에 의한 하이라이트 상태
+    content:
+      default:
+        description: 옵션 텍스트 레이블
+        required: true
+      checkmark:
+        description: 선택됨 표시 아이콘 (다중 선택 시)
+        required: false
+    visual_mapping:
+      class: select-option
+      data_attributes:
+        data-size: size
+        data-state: "selected+disabled > disabled > highlighted > selected > undefined (우선순위)"

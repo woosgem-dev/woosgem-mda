@@ -1,0 +1,79 @@
+component:
+  name: Alert
+  category: molecule
+  description: 알림 메시지. 사용자에게 정보, 성공, 경고, 오류 등의 피드백을 전달하는 인라인 메시지 요소
+
+semantics:
+  tag: div
+  role: alert
+
+attributes:
+  variant:
+    type: enum
+    values: [filled, outline, subtle]
+    default: subtle
+    description: 시각적 스타일 변형
+  status:
+    type: enum
+    values: [info, success, warning, error]
+    default: info
+    description: 알림 상태/유형. 아이콘과 색상이 자동으로 결정됨
+  closable:
+    type: boolean
+    default: false
+    description: 닫기 버튼 표시 여부
+
+content:
+  icon:
+    description: 상태 아이콘 영역 (status에 따라 기본 아이콘 제공 가능)
+    required: false
+  default:
+    description: 알림 메시지 본문 텍스트
+    required: true
+  action:
+    description: 닫기 버튼 또는 추가 액션 버튼 영역
+    required: false
+
+states:
+  info:
+    visual: 정보 색상 테마 (파란색 계열)
+    behavior: 일반 정보 전달
+    aria: {}
+  success:
+    visual: 성공 색상 테마 (녹색 계열)
+    behavior: 작업 완료 피드백
+    aria: {}
+  warning:
+    visual: 경고 색상 테마 (노란색 계열)
+    behavior: 주의 필요 피드백
+    aria: {}
+  error:
+    visual: 오류 색상 테마 (빨간색 계열)
+    behavior: 문제 발생 피드백
+    aria: {}
+
+interactions:
+  close:
+    triggers: [click]
+    condition: closable=true
+    description: 닫기 버튼 클릭으로 알림 닫기
+
+accessibility:
+  aria:
+    role: "alert (중요 메시지를 스크린 리더가 즉시 읽음)"
+    live: "assertive (role=alert에 암시적으로 포함)"
+  keyboard:
+    Tab: "closable=true일 때 닫기 버튼으로 포커스 이동"
+    Enter: "닫기 버튼에 포커스 시 알림 닫기"
+    Space: "닫기 버튼에 포커스 시 알림 닫기"
+  focus: closable=true일 때 닫기 버튼에 포커스 링 표시
+  notes:
+    - role=alert는 DOM에 삽입 시 스크린 리더가 자동으로 알림
+    - 중요하지 않은 정보는 role=status 사용 고려
+
+visual_mapping:
+  class: alert
+  data_attributes:
+    data-variant: variant
+    data-status: status
+    data-closable: "closable=true일 때 존재"

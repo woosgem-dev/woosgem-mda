@@ -1,0 +1,43 @@
+shared:
+  purpose: 2+ 도메인이 사용하는 공통 코드
+
+  modules:
+    tokens:
+      purpose: 디자인 토큰 — spacing, typography, color primitives
+      phase: permanent
+      spec: tokens/spec.yaml
+      files:
+        - tokens/spacing.ts
+        - tokens/typography.ts
+        - tokens/colors.ts
+        - tokens/breakpoints.ts
+
+    csp:
+      purpose: Color Set Protocol — 최소 색상 입력 → 81개 토큰 자동 생성
+      phase: permanent
+      spec: csp/spec.yaml
+      files:
+        - csp/generator.ts
+        - csp/transformers.ts
+        - csp/validators.ts
+        - csp/types.ts
+
+    utils:
+      purpose: 순수 유틸리티 함수
+      phase: phase-2-candidate
+      spec: utils/spec.yaml
+      files:
+        - utils/class-names.ts
+        - utils/merge-props.ts
+
+    types:
+      purpose: 크로스 도메인 타입 정의
+      phase: phase-2-candidate
+      files:
+        - types/component-definition.ts
+        - types/style-props.ts
+
+  rules:
+    - 단일 도메인만 사용하는 코드는 해당 도메인으로 이동
+    - utils는 순수 함수만 (부수 효과 금지)
+    - tokens 변경 시 모든 도메인에 영향 — 반드시 .decisions/ 기록

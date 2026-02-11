@@ -1,0 +1,85 @@
+component:
+  name: Input
+  category: molecule
+  description: 텍스트 입력 필드. 다양한 타입(text, email, password 등)을 지원하는 단일 라인 입력 요소
+
+semantics:
+  tag: input
+  role: textbox
+
+attributes:
+  variant:
+    type: enum
+    values: [outline, filled, underline]
+    default: outline
+    description: 시각적 스타일 변형
+  size:
+    type: enum
+    values: [sm, md, lg]
+    default: md
+    description: 입력 필드 크기
+  error:
+    type: boolean
+    default: false
+    description: 오류 상태 표시. aria-invalid="true"를 자동 설정
+  success:
+    type: boolean
+    default: false
+    description: 성공 상태 표시
+  disabled:
+    type: boolean
+    default: false
+    description: 비활성화 상태
+
+content:
+  default:
+    description: 입력 필드는 자체 닫힘 요소이므로 콘텐츠 영역 없음
+    required: false
+
+states:
+  error:
+    visual: 테두리 및 포커스 링이 오류 색상으로 변경
+    behavior: 입력 가능하나 유효성 검사 실패 상태 표시
+    aria: { invalid: "true" }
+  success:
+    visual: 테두리 및 포커스 링이 성공 색상으로 변경
+    behavior: 정상 입력 가능
+    aria: {}
+  disabled:
+    visual: 흐리게 표시, 커서 변경
+    behavior: 입력 불가, 포커스 불가
+    aria: { disabled: true }
+
+interactions:
+  input:
+    triggers: [keyboard]
+    condition: disabled=false
+    description: 텍스트 입력
+  focus:
+    triggers: [click, Tab]
+    condition: disabled=false
+    description: 입력 필드에 포커스
+  blur:
+    triggers: [Tab, click-outside]
+    condition: 포커스 상태일 때
+    description: 입력 필드에서 포커스 해제
+
+accessibility:
+  aria:
+    invalid: "error=true일 때 'true'"
+    describedby: "오류/도움말 텍스트 요소와 연결"
+    label: "연관된 label 요소 또는 aria-label 필수"
+  keyboard:
+    Tab: 포커스 이동
+  focus: 기본 포커스 링 표시, variant에 따라 스타일 변경
+  notes:
+    - id 속성으로 label의 for 연결 필수
+    - name 속성으로 폼 제출 지원
+    - aria-describedby로 오류/도움말 텍스트 연결 권장
+
+visual_mapping:
+  class: input
+  data_attributes:
+    data-variant: variant
+    data-size: size
+    data-state: "error > success > disabled > undefined (우선순위)"

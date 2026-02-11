@@ -1,0 +1,141 @@
+component:
+  name: Modal
+  category: organism
+  description: 오버레이 배경 위에 표시되는 대화상자. Header/Body/Footer 영역으로 구성되며, 포커스 트랩과 스크롤 잠금을 지원한다.
+
+semantics:
+  tag: div
+  role: dialog
+
+attributes:
+  open:
+    type: boolean
+    default: false
+    description: 모달 표시 여부. true이면 모달과 오버레이가 보이고, false이면 숨김 처리된다.
+  size:
+    type: enum
+    values: [sm, md, lg, xl, full]
+    default: md
+    description: 모달 너비 크기. full은 화면 전체를 차지한다.
+  closable:
+    type: boolean
+    default: true
+    description: 닫기 버튼 표시 및 Escape 키로 닫기 허용 여부.
+
+composition:
+  regions:
+    header:
+      component: ModalHeader
+      tag: div
+      description: 제목과 닫기 버튼이 위치하는 상단 영역.
+      required: false
+      attributes:
+        show-close:
+          type: boolean
+          default: true
+          description: 닫기 버튼 표시 여부.
+      content:
+        default:
+          description: 제목 텍스트 또는 커스텀 헤더 콘텐츠.
+          required: true
+        close:
+          description: 닫기 버튼 영역. 기본적으로 X 버튼이 렌더링된다.
+          required: false
+      visual_mapping:
+        class: modal-header
+        data_attributes:
+          data-show-close: "show-close가 true일 때 존재"
+    body:
+      component: ModalBody
+      tag: div
+      description: 모달의 주요 콘텐츠가 위치하는 본문 영역.
+      required: true
+      attributes:
+        scrollable:
+          type: boolean
+          default: true
+          description: 본문 내용이 넘칠 때 내부 스크롤 활성화 여부.
+      content:
+        default:
+          description: 본문 콘텐츠.
+          required: true
+      visual_mapping:
+        class: modal-body
+        data_attributes:
+          data-scrollable: "scrollable이 true일 때 존재"
+    footer:
+      component: ModalFooter
+      tag: div
+      description: 확인/취소 등 액션 버튼이 위치하는 하단 영역.
+      required: false
+      attributes:
+        align:
+          type: enum
+          values: [start, center, end]
+          default: end
+          description: 푸터 내부 콘텐츠 정렬 방향.
+      content:
+        default:
+          description: 액션 버튼 등 푸터 콘텐츠.
+          required: true
+      visual_mapping:
+        class: modal-footer
+        data_attributes:
+          data-align: align
+  rendering:
+    strategy: portal
+    description: 문서 최상위(body)에 렌더링하여 z-index 충돌을 방지한다.
+  dependencies:
+    atoms: [Overlay]
+
+content:
+  default:
+    description: ModalHeader, ModalBody, ModalFooter 서브컴포넌트를 배치하는 영역.
+    required: true
+
+states:
+  open:
+    visual: 오버레이와 모달 다이얼로그가 화면에 표시된다.
+    behavior:
+      - body 스크롤 잠금
+      - 포커스 트랩 활성화 (모달 내부에서만 Tab 순환)
+      - 첫 번째 포커스 가능 요소로 포커스 이동
+    aria:
+      modal: true
+      hidden: false
+  closed:
+    visual: 모달과 오버레이가 화면에서 사라진다.
+    behavior:
+      - body 스크롤 복원
+      - 포커스 트랩 해제
+      - 모달을 열었던 트리거 요소로 포커스 반환
+    aria:
+      modal: true
+      hidden: true
+
+interactions:
+  close:
+    triggers:
+      - Escape 키 (closable=true일 때)
+      - 오버레이 영역 클릭
+      - 닫기 버튼 클릭
+    condition: open=true AND closable=true
+    description: 모달을 닫는다. open 상태를 false로 전환한다.
+
+accessibility:
+  aria:
+    modal: "항상 true (dialog 역할에 필수)"
+    hidden: "open=false일 때 true, open=true일 때 false"
+    labelledby: "ModalHeader가 존재할 경우 헤더 요소의 id로 자동 연결"
+  keyboard:
+    Escape: "closable=true일 때 모달 닫기"
+    Tab: "포커스 트랩 - 모달 내부 포커스 가능 요소 사이에서만 순환"
+    Shift+Tab: "포커스 트랩 - 역방향 순환"
+  focus: 열릴 때 첫 번째 포커스 가능 요소로 이동, 닫힐 때 트리거 요소로 복원
+
+visual_mapping:
+  class: modal
+  data_attributes:
+    data-size: size
+    data-open: "open이 true일 때 존재"
+    data-closable: "closable이 true일 때 존재"

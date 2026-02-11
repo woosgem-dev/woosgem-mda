@@ -1,0 +1,63 @@
+component:
+  name: Avatar
+  category: atom
+  description: 사용자 아바타. 프로필 이미지, 이니셜 또는 기본 아이콘을 원형/사각형으로 표시
+
+semantics:
+  tag: div
+  role: img
+
+attributes:
+  size:
+    type: enum
+    values: [xs, sm, md, lg, xl]
+    default: md
+    description: 아바타 크기
+  shape:
+    type: enum
+    values: [circle, square]
+    default: circle
+    description: 아바타 외형
+  src:
+    type: string
+    default: ""
+    description: 프로필 이미지 URL. 비어있으면 fallback 표시
+  alt:
+    type: string
+    default: ""
+    description: 이미지 대체 텍스트
+  fallback:
+    type: string
+    default: ""
+    description: 이미지 없을 때 표시할 텍스트 (이니셜 등)
+
+content:
+  default:
+    description: 이미지 로드 실패 또는 src 미제공 시 표시할 폴백 콘텐츠
+    required: false
+
+states:
+  has-image:
+    visual: 프로필 이미지 표시
+    behavior: src가 유효한 URL일 때 이미지 렌더링
+    aria: {}
+  no-image:
+    visual: fallback 텍스트 또는 기본 아이콘 표시
+    behavior: src가 비어있거나 로드 실패 시 폴백 렌더링
+    aria: {}
+
+interactions: {}
+
+accessibility:
+  aria:
+    label: "alt 속성으로 사용자 이름 등 설명 제공"
+    role: "img 역할로 이미지 의미 전달"
+  keyboard: {}
+  focus: 포커스 불가 (정보 표시 전용)
+
+visual_mapping:
+  class: avatar
+  data_attributes:
+    data-size: size
+    data-shape: shape
+    data-has-image: "src가 존재하면 true, 아니면 미존재"
