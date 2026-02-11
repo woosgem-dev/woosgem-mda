@@ -1,0 +1,353 @@
+# schemas/platform/ios.schema.yaml
+# iOS platform schema — SwiftUI views, VoiceOver, ViewModifiers, gestures.
+# Layer 1 for iOS. Combines platform + framework (SwiftUI IS the platform).
+
+schema:
+  version: 2.0.0
+  layer: platform
+  platform: ios
+  description: iOS/SwiftUI platform mapping — View type, VoiceOver, gestures, Dynamic Type
+  extends: base/component.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: View Mapping
+# ─────────────────────────────────────────────
+
+view:
+  required: true
+  fields:
+    type:
+      type: string
+      required: true
+      description: "SwiftUI View type (Button, Text, Toggle, etc.) or custom view name"
+    native:
+      type: boolean
+      required: true
+      description: "true = wraps system SwiftUI view, false = fully custom"
+    customization:
+      type: string
+      required: false
+      description: "Style protocol used for customization (e.g., ButtonStyle, ToggleStyle)"
+    composition:
+      type: map
+      required: false
+      description: "View tree structure for custom views"
+      fields:
+        root: { type: string, required: true, description: "Root container (HStack, VStack, ZStack)" }
+        children: { type: array, required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 2: Content Parameters (SwiftUI)
+# ─────────────────────────────────────────────
+
+content_params:
+  required: false
+  description: "SwiftUI View initializer parameters and @ViewBuilder content"
+  fields:
+    parameters:
+      type: map
+      required: false
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          default: { required: false }
+          label: { type: string, required: false, description: "External parameter label (use _ for no label)" }
+          description: { type: string, required: true }
+    view_builder:
+      type: string
+      required: false
+      description: "@ViewBuilder content parameter type"
+      example: "@ViewBuilder content: () -> Content"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Property Wrappers (SwiftUI)
+# ─────────────────────────────────────────────
+
+property_wrappers:
+  required: false
+  description: "SwiftUI property wrapper declarations used by the component"
+  allowed:
+    - "@State"
+    - "@Binding"
+    - "@ObservedObject"
+    - "@StateObject"
+    - "@EnvironmentObject"
+    - "@Environment"
+    - "@Observable"
+    - "@Bindable"
+    - "@GestureState"
+    - "@ScaledMetric"
+    - "@FocusState"
+    - "@AppStorage"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Accessibility (VoiceOver)
+# ─────────────────────────────────────────────
+
+accessibility:
+  required: true
+  fields:
+    label:
+      type: map
+      required: true
+      fields:
+        source: { type: string, required: true, description: "Property or slot providing the label" }
+        description: { type: string, required: false }
+    traits:
+      type: map
+      required: true
+      fields:
+        default: { type: "string[]", required: true, description: "Default accessibility traits" }
+        conditional:
+          type: array
+          required: false
+          item_schema:
+            fields:
+              when: { required: true, type: structured }
+              add: { type: "string[]", required: false }
+              remove: { type: "string[]", required: false }
+      allowed_values:
+        - .button
+        - .link
+        - .image
+        - .header
+        - .searchField
+        - .staticText
+        - .adjustable
+        - .notEnabled
+        - .selected
+        - .updatesFrequently
+        - .summaryElement
+    hint:
+      type: map
+      required: false
+      fields:
+        default: { required: false }
+        conditional: { type: array, required: false }
+    value:
+      type: string
+      required: false
+      description: "Accessibility value source (for sliders, progress, etc.)"
+    custom_actions:
+      type: array
+      required: false
+      description: "VoiceOver rotor custom actions"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Visual (ViewModifiers)
+# ─────────────────────────────────────────────
+
+visual:
+  required: true
+  fields:
+    modifiers:
+      type: array
+      required: true
+      description: "ViewModifier chain applied to the view"
+      item_schema:
+        fields:
+          name: { type: string, required: true, description: "Modifier name (frame, opacity, etc.)" }
+          when: { required: false, type: structured, description: "Condition to apply" }
+          parameters: { type: map, required: false }
+          mapping: { type: map, required: false, description: "Property value → modifier value mapping" }
+    custom_styles:
+      type: map
+      required: false
+      description: "Custom ButtonStyle/ToggleStyle/etc. definitions"
+
+# ─────────────────────────────────────────────
+# SECTION 6: Interaction Mapping (Gestures)
+# ─────────────────────────────────────────────
+
+interactions:
+  required: true
+  description: "Maps Layer 0 semantic triggers to iOS gestures"
+  fields:
+    _behavior_name:
+      type: map
+      fields:
+        gesture:
+          type: string
+          required: true
+          description: "SwiftUI gesture type"
+          example: "TapGesture(count: 1)"
+        condition: { required: false, type: structured }
+        callback:
+          type: string
+          required: true
+          description: "Closure parameter name"
+        haptic:
+          type: enum
+          required: false
+          values: [light, medium, heavy, rigid, soft, selection, none]
+          description: "Haptic feedback on interaction"
+
+# ─────────────────────────────────────────────
+# SECTION 7: State Handling
+# ─────────────────────────────────────────────
+
+state:
+  required: true
+  fields:
+    external:
+      type: array
+      required: false
+      description: "State passed from parent"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          wrapper: { type: enum, values: ["@Binding", "value", "@ObservedObject", "@EnvironmentObject", "@Bindable"] }
+    internal:
+      type: array
+      required: false
+      description: "State managed internally"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          wrapper: { type: enum, values: ["@State", "@GestureState", "@FocusState"] }
+          default: { required: true }
+    environment:
+      type: array
+      required: false
+      description: "Values read from SwiftUI Environment"
+      item_schema:
+        fields:
+          key_path: { type: string, required: true, description: "Environment key path (e.g., \\.colorScheme, \\.dismiss)" }
+          type: { type: string, required: true }
+          purpose: { type: string, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 8: Layout
+# ─────────────────────────────────────────────
+
+layout:
+  required: false
+  fields:
+    container:
+      type: enum
+      required: false
+      values: [HStack, VStack, ZStack, none]
+    alignment: { type: string, required: false }
+    spacing: { required: false, description: "Token reference for spacing" }
+    preferred_size:
+      type: map
+      required: false
+      fields:
+        width: { type: enum, values: [fixed, flexible, fill] }
+        height: { type: enum, values: [fixed, flexible, fill] }
+    safe_area:
+      type: map
+      required: false
+      fields:
+        edges: { type: "string[]", description: "Edges to respect (.top, .bottom, .leading, .trailing)" }
+        ignore: { type: boolean, default: false }
+
+# ─────────────────────────────────────────────
+# SECTION 9: Dynamic Type
+# ─────────────────────────────────────────────
+
+dynamic_type:
+  required: false
+  fields:
+    enabled: { type: boolean, required: true, default: true }
+    font_style:
+      type: enum
+      required: false
+      values: [largeTitle, title, title2, title3, headline, body, callout, subheadline, footnote, caption, caption2]
+    scaling_mode:
+      type: enum
+      required: false
+      values: [automatic, custom]
+      default: automatic
+
+# ─────────────────────────────────────────────
+# SECTION 10: Appearance (Dark Mode)
+# ─────────────────────────────────────────────
+
+appearance:
+  required: false
+  fields:
+    color_scheme:
+      type: enum
+      required: true
+      values: [semantic, manual]
+      description: "semantic = uses CSP colors that adapt automatically"
+    overrides:
+      type: array
+      required: false
+      description: "Explicit dark mode overrides"
+
+# ─────────────────────────────────────────────
+# SECTION 11: Animation
+# ─────────────────────────────────────────────
+
+animation:
+  required: false
+  fields:
+    default:
+      type: string
+      required: false
+      description: "Default animation curve"
+    state_transitions:
+      type: map
+      required: false
+      description: "Per-state animation definitions"
+    gesture_feedback:
+      type: map
+      required: false
+      description: "Haptic feedback per interaction"
+
+# ─────────────────────────────────────────────
+# SECTION 12: Platform Constraints
+# ─────────────────────────────────────────────
+
+platform:
+  required: false
+  fields:
+    min_ios: { type: string, required: false, description: "Minimum iOS version" }
+    min_macos: { type: string, required: false }
+    size_classes:
+      type: map
+      required: false
+      description: "Responsive adjustments per size class"
+
+# ─────────────────────────────────────────────
+# SECTION 13: HIG Reference
+# ─────────────────────────────────────────────
+
+hig:
+  required: false
+  fields:
+    reference: { type: string, required: false, description: "Apple HIG URL" }
+    conformance: { type: "string[]", required: false, description: "HIG rules this component follows" }
+    deviations: { type: array, required: false, description: "Intentional HIG deviations with justification" }
+
+# ─────────────────────────────────────────────
+# SECTION 14: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    accessibility_identifier: { type: string, required: false, description: "XCTest identifier pattern" }
+    previews:
+      type: array
+      required: false
+      description: "Xcode preview configurations"
+
+# ─────────────────────────────────────────────
+# SECTION 15: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - view.type must be a valid SwiftUI View or custom name
+    - All interaction gestures must reference behaviors defined in Layer 0
+    - accessibility.traits must use valid UIAccessibilityTraits values
+    - State wrappers must be valid SwiftUI property wrappers
+  warnings:
+    - Prefer native SwiftUI views over custom when possible
+    - All interactive components should define haptic feedback
+    - Dynamic Type should be enabled for text-containing components

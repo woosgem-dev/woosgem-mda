@@ -1,0 +1,186 @@
+# schemas/function.schema.yaml
+# Defines the structure for pure utility function spec.yaml files.
+# Applies to: shared/utils/spec.yaml (and any future function modules)
+
+schema:
+  version: 2.0.0
+  description: Structure and constraints for function module spec.yaml files
+  applies_to: shared/utils/spec.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Module Header
+# ─────────────────────────────────────────────
+
+module_definition:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: kebab-case
+      description: "Module identifier, matches directory name"
+    purpose:
+      type: string
+      required: true
+      language: english
+      description: "One-line description of what this module provides"
+    phase:
+      type: enum
+      required: true
+      values: [permanent, phase-2-candidate, experimental]
+    consumers:
+      type: enum
+      required: true
+      values: [all-domains, specific]
+    consumer_list:
+      type: "string[]"
+      required: "when consumers=specific"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Required Sections
+# ─────────────────────────────────────────────
+
+required_sections: [module, functions]
+optional_sections: [type_exports, rules]
+
+# ─────────────────────────────────────────────
+# SECTION 3: Function Definition
+# ─────────────────────────────────────────────
+
+function_definition:
+  description: "Pure function specification with signature, behavior, and test cases"
+
+  fields:
+    description:
+      type: string
+      required: true
+      language: english
+    signature:
+      type: string
+      required: true
+      description: "Full function signature including generics and return type"
+    pure:
+      type: boolean
+      required: true
+      description: "Must be true for shared utils. Guarantees no side effects."
+    input_types:
+      type: map
+      required: false
+      description: "Custom type definitions used in the signature"
+      value_schema:
+        fields:
+          description: { type: string, required: true }
+          union:
+            type: "string[]"
+            required: false
+            description: "Union of accepted types"
+          fields:
+            type: map
+            required: false
+            description: "Object shape"
+    behavior:
+      type: "string[]"
+      required: true
+      description: "Ordered list of behavior rules. Each rule must be unambiguous and testable."
+      constraints:
+        - No ambiguous words (usually, sometimes, might, etc.)
+        - Each rule should map to at least one test case
+        - Rules are evaluated in order (first match wins where applicable)
+    examples:
+      type: "array"
+      required: false
+      description: "Input/output examples for quick understanding"
+      item_schema:
+        fields:
+          input: { required: true, description: "Function arguments" }
+          output: { required: true, description: "Expected return value" }
+    test_cases:
+      type: "array"
+      required: true
+      description: "Exhaustive test cases for implementation verification"
+      min_items: 3
+      item_schema:
+        fields:
+          id:
+            type: string
+            required: true
+            format: kebab-case
+            description: "Unique test identifier"
+          description:
+            type: string
+            required: false
+            language: english
+            description: "Clarification when given/then is not self-explanatory"
+          given:
+            required: true
+            description: "Input value(s) — must be a concrete literal, not natural language"
+          then:
+            required: true
+            description: "Expected output — must be a concrete literal, not natural language"
+          then_behavior:
+            type: string
+            required: false
+            description: "For side-effect assertions when 'then' value alone is insufficient"
+          invariant:
+            type: string
+            required: false
+            description: "Additional constraint that must hold (e.g., 'input unchanged')"
+
+  validation:
+    - Signature must follow the language syntax declared in the composed lang schema
+    - pure must be true (shared utils cannot have side effects)
+    - Every behavior rule should have corresponding test case(s)
+    - test_cases.given must be concrete literals (no natural language)
+    - test_cases.then must be concrete literals (no natural language)
+
+# ─────────────────────────────────────────────
+# SECTION 4: Type Exports
+# ─────────────────────────────────────────────
+
+type_exports_definition:
+  type: "string[]"
+  required: false
+  description: "Types this module exports (from input_types or other definitions)"
+  constraints:
+    - Names must be PascalCase
+
+# ─────────────────────────────────────────────
+# SECTION 5: Rules
+# ─────────────────────────────────────────────
+
+rules_definition:
+  type: "string[]"
+  required: false
+  description: "Module-specific constraints and invariants"
+  constraints:
+    - Each rule must be a concrete, verifiable statement
+    - No ambiguous words (usually, sometimes, might)
+    - Language: english
+
+# ─────────────────────────────────────────────
+# SECTION 6: Language & Style Rules
+# ─────────────────────────────────────────────
+
+language_rules:
+  all_text: english
+  description_style: noun-phrase
+  no_ambiguous_words: ["usually", "sometimes", "might", "can be", "etc."]
+  null_convention: "Use YAML null (~) for absent values. Never 'undefined' string."
+
+# ─────────────────────────────────────────────
+# SECTION 7: Validation Checklist
+# ─────────────────────────────────────────────
+
+validation_checklist:
+  errors:
+    - Module header present with all required fields
+    - Function signatures use valid syntax for the declared language
+    - Functions marked pure=true
+    - Function test_cases have 3+ concrete test cases
+    - Test cases use concrete literals (no natural language in given/then)
+    - All text in English
+    - No YAML string "undefined"
+
+  warnings:
+    - Functions should have behavior rules covering all test cases
+    - type_exports names must be PascalCase

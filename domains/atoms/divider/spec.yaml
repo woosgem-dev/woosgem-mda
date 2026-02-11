@@ -1,3 +1,5 @@
+$schema: schemas/base/component.schema.yaml
+
 component:
   name: Divider
   category: atom

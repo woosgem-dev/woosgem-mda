@@ -1,0 +1,522 @@
+# shared/csp/spec.yaml
+# Color Set Protocol — minimal color input generates a complete, consistent color system.
+# Platform-neutral. Pure functions, no side effects. All colors stored as hex or structured objects.
+$schema: schemas/base/protocol.schema.yaml
+
+module:
+  name: csp
+  purpose: Color Set Protocol — minimal color input generates 81 design tokens
+  phase: permanent
+  consumers: all-domains
+
+# ─────────────────────────────────────────────
+# INPUT: ColorSetDefinition
+# ─────────────────────────────────────────────
+
+input:
+  description: "Minimal definition that drives the entire color system"
+
+  required_fields:
+    id:
+      type: string
+      description: "Unique theme identifier"
+      example: "default"
+    name:
+      type: string
+      description: "Human-readable theme name"
+      example: "Default Light"
+    mode:
+      type: enum
+      values: [light, dark]
+      description: "Color mode — affects default derivation and transformations"
+    primary:
+      type: object
+      fields:
+        base:
+          type: string
+          format: hex-color
+          required: true
+          description: "The single required color — everything else can be derived"
+
+  optional_fields:
+    secondary:
+      type: object
+      fields:
+        base: { type: string, format: hex-color }
+      default_derivation:
+        light: { fn: darken, args: [primary.base, 20] }
+        dark:  { fn: lighten, args: [primary.base, 20] }
+
+    danger:
+      type: object
+      fields:
+        base: { type: string, format: hex-color }
+      default:
+        light: "#DC2626"
+        dark: "#EF4444"
+
+    success:
+      type: object
+      fields:
+        base: { type: string, format: hex-color }
+      default:
+        light: "#16A34A"
+        dark: "#22C55E"
+
+    warning:
+      type: object
+      fields:
+        base: { type: string, format: hex-color }
+      default:
+        light: "#F59E0B"
+        dark: "#F59E0B"
+
+    info:
+      type: object
+      fields:
+        base: { type: string, format: hex-color }
+      default:
+        light: "#2563EB"
+        dark: "#3B82F6"
+
+    neutral:
+      type: object
+      description: "Override the neutral/gray scale"
+      fields:
+        50:  { type: string, format: hex-color }
+        100: { type: string, format: hex-color }
+        200: { type: string, format: hex-color }
+        300: { type: string, format: hex-color }
+        400: { type: string, format: hex-color }
+        500: { type: string, format: hex-color }
+        600: { type: string, format: hex-color }
+        700: { type: string, format: hex-color }
+        800: { type: string, format: hex-color }
+        900: { type: string, format: hex-color }
+        950: { type: string, format: hex-color }
+
+    text:
+      type: object
+      fields:
+        default: { type: string, format: hex-color }
+        muted:   { type: string, format: hex-color }
+        subtle:  { type: string, format: hex-color }
+        inverse: { type: string, format: hex-color }
+
+    background:
+      type: object
+      fields:
+        default:  { type: string, format: hex-color }
+        subtle:   { type: string, format: hex-color }
+        muted:    { type: string, format: hex-color }
+        elevated: { type: string, format: hex-color }
+
+    border:
+      type: object
+      fields:
+        default: { type: string, format: hex-color }
+        hover:   { type: string, format: hex-color }
+
+# ─────────────────────────────────────────────
+# TRANSFORMATION DSL
+# ─────────────────────────────────────────────
+# Formal grammar for deriving colors. No natural language.
+#
+# Derivation types:
+#   source:    { source: "token-name" }              — alias to another resolved token
+#   transform: { fn: "function-name", args: [...] }  — apply function to source
+#   default:   { light: "#hex", dark: "#hex" }        — static per-mode values
+#   input:     { input: "field.path" }                — direct from input definition
+#
+# Mode-aware transforms specify per-mode:
+#   { light: { fn: darken, args: [base, 10] }, dark: { fn: lighten, args: [base, 10] } }
+
+transformations:
+  description: "Named transformation rules. Each rule maps to a function call with concrete arguments."
+
+  rules:
+    hover:
+      light: { fn: darken, args: [base, 10] }
+      dark:  { fn: lighten, args: [base, 10] }
+    active:
+      light: { fn: darken, args: [base, 15] }
+      dark:  { fn: lighten, args: [base, 15] }
+    alpha10:
+      both: { fn: withAlpha, args: [base, 0.10] }
+    alpha20:
+      both: { fn: withAlpha, args: [base, 0.20] }
+    light:
+      light: { fn: lighten, args: [base, 45] }
+      dark:  { fn: withAlpha, args: [base, 0.10] }
+    lightDarken5:
+      light: { fn: lighten, args: [base, 40] }
+      dark:  { fn: withAlpha, args: [base, 0.15] }
+    lighten20:
+      light: { fn: lighten, args: [base, 20] }
+      dark:  { fn: lighten, args: [base, 15] }
+    darken3:
+      both: { fn: darken, args: [base, 3] }
+
+# ─────────────────────────────────────────────
+# OUTPUT: ResolvedColorSet (81 tokens)
+# ─────────────────────────────────────────────
+
+output:
+  description: "Complete resolved color set — all 81 tokens computed"
+  token_count: 81
+  output_pattern: "--wg-color-{key}"
+
+  categories:
+    primary:
+      count: 5
+      tokens:
+        primary:           { input: primary.base }
+        primary-hover:     { transform: hover, source: primary }
+        primary-active:    { transform: active, source: primary }
+        primary-alpha-10:  { transform: alpha10, source: primary }
+        primary-alpha-20:  { transform: alpha20, source: primary }
+
+    secondary:
+      count: 4
+      tokens:
+        secondary:          { input: secondary.base, fallback: { light: { fn: darken, args: [primary.base, 20] }, dark: { fn: lighten, args: [primary.base, 20] } } }
+        secondary-hover:    { transform: hover, source: secondary }
+        secondary-active:   { transform: active, source: secondary }
+        secondary-alpha-10: { transform: alpha10, source: secondary }
+
+    danger:
+      count: 5
+      tokens:
+        danger:            { input: danger.base, fallback: { light: "#DC2626", dark: "#EF4444" } }
+        danger-hover:      { transform: hover, source: danger }
+        danger-active:     { transform: active, source: danger }
+        danger-alpha-20:   { transform: alpha20, source: danger }
+        danger-lighten-20: { transform: lighten20, source: danger }
+
+    success:
+      count: 5
+      tokens:
+        success:            { input: success.base, fallback: { light: "#16A34A", dark: "#22C55E" } }
+        success-hover:      { transform: hover, source: success }
+        success-active:     { transform: active, source: success }
+        success-alpha-20:   { transform: alpha20, source: success }
+        success-lighten-20: { transform: lighten20, source: success }
+
+    warning:
+      count: 3
+      tokens:
+        warning:        { input: warning.base, fallback: { light: "#F59E0B", dark: "#F59E0B" } }
+        warning-hover:  { transform: hover, source: warning }
+        warning-active: { transform: active, source: warning }
+
+    info:
+      count: 3
+      tokens:
+        info:        { input: info.base, fallback: { light: "#2563EB", dark: "#3B82F6" } }
+        info-hover:  { transform: hover, source: info }
+        info-active: { transform: active, source: info }
+
+    text:
+      count: 4
+      tokens:
+        text:         { default: { light: "#111827", dark: "#F9FAFB" } }
+        text-muted:   { default: { light: "#6B7280", dark: "#9CA3AF" } }
+        text-subtle:  { default: { light: "#9CA3AF", dark: "#6B7280" } }
+        text-inverse: { default: { light: "#FFFFFF", dark: "#111827" } }
+
+    background:
+      count: 6
+      tokens:
+        background:                 { default: { light: "#FFFFFF", dark: "#111827" } }
+        background-subtle:          { default: { light: "#F9FAFB", dark: "#1F2937" } }
+        background-muted:           { default: { light: "#F3F4F6", dark: "#374151" } }
+        background-elevated:        { default: { light: "#FFFFFF", dark: "#1F2937" } }
+        background-muted-darken-3:  { transform: darken3, source: background-muted }
+        background-subtle-darken-3: { transform: darken3, source: background-subtle }
+
+    border:
+      count: 2
+      tokens:
+        border:       { default: { light: "#E5E7EB", dark: "#374151" } }
+        border-hover: { default: { light: "#D1D5DB", dark: "#4B5563" } }
+
+    neutral:
+      count: 11
+      tokens:
+        neutral-50:  { default: { light: "#F9FAFB", dark: "#F9FAFB" } }
+        neutral-100: { default: { light: "#F3F4F6", dark: "#F3F4F6" } }
+        neutral-200: { default: { light: "#E5E7EB", dark: "#E5E7EB" } }
+        neutral-300: { default: { light: "#D1D5DB", dark: "#D1D5DB" } }
+        neutral-400: { default: { light: "#9CA3AF", dark: "#9CA3AF" } }
+        neutral-500: { default: { light: "#6B7280", dark: "#6B7280" } }
+        neutral-600: { default: { light: "#4B5563", dark: "#4B5563" } }
+        neutral-700: { default: { light: "#374151", dark: "#374151" } }
+        neutral-800: { default: { light: "#1F2937", dark: "#1F2937" } }
+        neutral-900: { default: { light: "#111827", dark: "#111827" } }
+        neutral-950: { default: { light: "#030712", dark: "#030712" } }
+
+    surface:
+      count: 4
+      tokens:
+        surface:         { default: { light: "#FFFFFF", dark: "#1F2937" } }
+        surface-raised:  { default: { light: "#FFFFFF", dark: "#374151" } }
+        surface-overlay: { default: { light: { color: "#000000", alpha: 0.5 }, dark: { color: "#000000", alpha: 0.7 } } }
+        surface-sunken:  { default: { light: "#F3F4F6", dark: "#111827" } }
+
+    input:
+      count: 7
+      tokens:
+        input-background:      { source: background }
+        input-border:          { source: border }
+        input-border-hover:    { source: border-hover }
+        input-border-focus:    { source: primary }
+        input-placeholder:     { source: text-subtle }
+        input-disabled:        { source: background-muted }
+        input-disabled-border: { source: border }
+
+    link:
+      count: 4
+      tokens:
+        link:         { source: primary }
+        link-hover:   { source: primary-hover }
+        link-visited: { default: { light: "#7C3AED", dark: "#A78BFA" } }
+        link-active:  { source: primary-active }
+
+    state:
+      count: 6
+      tokens:
+        state-disabled:      { default: { light: "#F3F4F6", dark: "#374151" } }
+        state-disabled-text: { default: { light: "#9CA3AF", dark: "#6B7280" } }
+        state-selected:      { source: primary-alpha-10 }
+        state-selected-text: { source: primary }
+        state-hover:         { source: background-muted }
+        state-pressed:       { source: background-muted-darken-3 }
+
+    shadow:
+      count: 3
+      tokens:
+        shadow-default: { default: { light: { color: "#000000", alpha: 0.1 }, dark: { color: "#000000", alpha: 0.3 } } }
+        shadow-medium:  { default: { light: { color: "#000000", alpha: 0.15 }, dark: { color: "#000000", alpha: 0.4 } } }
+        shadow-large:   { default: { light: { color: "#000000", alpha: 0.25 }, dark: { color: "#000000", alpha: 0.5 } } }
+
+    accent_lights:
+      count: 8
+      tokens:
+        red-light:              { transform: light, source: danger }
+        red-light-darken-5:     { transform: lightDarken5, source: danger }
+        green-light:            { transform: light, source: success }
+        green-light-darken-5:   { transform: lightDarken5, source: success }
+        yellow-light:           { transform: light, source: warning }
+        yellow-light-darken-5:  { transform: lightDarken5, source: warning }
+        blue-light:             { transform: light, source: info }
+        blue-light-darken-5:    { transform: lightDarken5, source: info }
+
+    focus:
+      count: 1
+      tokens:
+        focus-ring: { source: primary-alpha-20 }
+
+# ─────────────────────────────────────────────
+# COLOR MANIPULATION FUNCTIONS
+# ─────────────────────────────────────────────
+
+functions:
+  description: "Pure color manipulation functions. No external dependencies. Platform-agnostic math."
+
+  conversion:
+    - name: hexToRgb
+      signature: "(hex: HexColor) => RgbColor"
+      description: "Parse hex string to RGB object { r: 0-255, g: 0-255, b: 0-255 }"
+    - name: rgbToHex
+      signature: "(rgb: RgbColor) => HexColor"
+      description: "Convert RGB object to 6-digit hex string"
+    - name: rgbToHsl
+      signature: "(rgb: RgbColor) => HslColor"
+      description: "Convert RGB to HSL { h: 0-360, s: 0-100, l: 0-100 }"
+    - name: hslToRgb
+      signature: "(hsl: HslColor) => RgbColor"
+      description: "Convert HSL to RGB"
+
+  manipulation:
+    - name: darken
+      signature: "(hex: HexColor, percent: number) => HexColor"
+      description: "Decrease HSL lightness by absolute percent points. darken('#808080', 10) reduces L from 50 to 40."
+      color_space: HSL
+    - name: lighten
+      signature: "(hex: HexColor, percent: number) => HexColor"
+      description: "Increase HSL lightness by absolute percent points. lighten('#808080', 10) increases L from 50 to 60."
+      color_space: HSL
+    - name: withAlpha
+      signature: "(hex: HexColor, alpha: number) => AlphaColor"
+      description: "Apply transparency. Returns { color: HexColor, alpha: number } object, not a CSS string."
+      return_type: "{ color: HexColor, alpha: number }"
+    - name: mix
+      signature: "(color1: HexColor, color2: HexColor, weight: number) => HexColor"
+      description: "Blend two colors. weight 0.0 = all color1, 1.0 = all color2."
+    - name: saturate
+      signature: "(hex: HexColor, percent: number) => HexColor"
+      description: "Increase HSL saturation by absolute percent points"
+      color_space: HSL
+    - name: desaturate
+      signature: "(hex: HexColor, percent: number) => HexColor"
+      description: "Decrease HSL saturation by absolute percent points"
+      color_space: HSL
+    - name: invert
+      signature: "(hex: HexColor) => HexColor"
+      description: "Invert RGB channels (255 - r, 255 - g, 255 - b)"
+    - name: complement
+      signature: "(hex: HexColor) => HexColor"
+      description: "180-degree hue rotation in HSL"
+
+  analysis:
+    - name: luminance
+      signature: "(hex: HexColor) => number"
+      description: "Calculate relative luminance per WCAG 2.1 formula. Returns 0.0 (black) to 1.0 (white)."
+    - name: contrastRatio
+      signature: "(color1: HexColor, color2: HexColor) => number"
+      description: "WCAG 2.1 contrast ratio. Returns 1.0 (identical) to 21.0 (black vs white)."
+    - name: isLight
+      signature: "(hex: HexColor) => boolean"
+      description: "True if relative luminance > 0.179 (standard threshold for contrast against white vs black)"
+    - name: isDark
+      signature: "(hex: HexColor) => boolean"
+      description: "True if relative luminance <= 0.179"
+
+  validation:
+    - name: isValidHex
+      signature: "(input: string) => boolean"
+      description: "Check if string is valid hex color (#RGB, #RRGGBB, #RRGGBBAA)"
+    - name: parseColor
+      signature: "(input: string) => HexColor"
+      description: "Parse any supported color format to normalized 6-digit lowercase hex"
+
+# ─────────────────────────────────────────────
+# GENERATOR
+# ─────────────────────────────────────────────
+
+generator:
+  description: "Takes ColorSetDefinition, produces ResolvedColorSet with all 81 tokens"
+
+  api:
+    class: ColorSetGenerator
+    method: generate
+    input: ColorSetDefinition
+    output: ResolvedColorSet
+
+  built_in_presets:
+    default-light:
+      id: default
+      name: Default Light
+      mode: light
+      primary_base: "#2563EB"
+    default-dark:
+      id: dark
+      name: Default Dark
+      mode: dark
+      primary_base: "#3B82F6"
+
+# ─────────────────────────────────────────────
+# OUTPUT FORMATS
+# ─────────────────────────────────────────────
+
+output_formats:
+  web:
+    css_variables:
+      method: generateCSSVariables
+      description: "CSS custom property declarations"
+      example: "--wg-color-primary: #2563EB;"
+    theme_css:
+      method: generateThemeCSS
+      description: "Complete CSS rule with selector"
+      example: "[data-theme='default'] { --wg-color-primary: #2563EB; ... }"
+    multi_theme_css:
+      method: generateMultiThemeCSS
+      description: "Multiple theme rules in one stylesheet"
+    scss_variables:
+      method: generateSCSSVariables
+      description: "SCSS variable declarations"
+    scss_map:
+      method: generateSCSSMap
+      description: "SCSS map for programmatic access"
+    typescript_constants:
+      method: generateTypeScriptConstants
+      description: "Individual const exports per token"
+    typescript_object:
+      method: generateTypeScriptObject
+      description: "Single theme object with all tokens"
+  android:
+    xml_colors:
+      method: generateAndroidXmlColors
+      description: "Android colors.xml resource file"
+      example: '<color name="wg_color_primary">#2563EB</color>'
+    compose_theme:
+      method: generateComposeTheme
+      description: "Jetpack Compose Color() constants"
+      example: "val Primary = Color(0xFF2563EB)"
+  ios:
+    swift_colors:
+      method: generateSwiftColors
+      description: "UIColor/Color extensions"
+      example: "static let primary = Color(hex: 0x2563EB)"
+    asset_catalog:
+      method: generateAssetCatalog
+      description: "Xcode Color Set assets with light/dark variants"
+
+# ─────────────────────────────────────────────
+# COMPONENT VARIABLES
+# ─────────────────────────────────────────────
+
+component_variables:
+  description: |
+    Per-component color override tokens.
+    Web: CSS custom properties via inline style.
+    Android: CompositionLocal overrides.
+    iOS: Environment value overrides.
+  pattern:
+    css: "--wg-{component}-{property}"
+    compose: "Local{Component}{Property}"
+    swiftui: "wg{Component}{Property}"
+
+  definitions:
+    button:    [bg, bg-hover, bg-active, text, border]
+    input:     [bg, text, border, border-focus, placeholder]
+    badge:     [bg, text]
+    alert:     [bg, text, border, icon]
+    overlay:   [bg, blur]
+    switch:    [track, track-active, thumb]
+    checkbox:  [border, bg, bg-checked, check]
+    radio:     [border, bg, dot]
+    tab:       [text, text-active, indicator]
+    avatar:    [bg, text, border]
+    spinner:   [color]
+    divider:   [color]
+    textarea:  [bg, text, border, border-focus]
+    icon-button: [bg, bg-hover, color]
+    list-item: [bg, bg-hover, bg-active, text]
+    segmented-control: [bg, bg-active, text, text-active]
+
+# ─────────────────────────────────────────────
+# TYPE EXPORTS
+# ─────────────────────────────────────────────
+
+type_exports:
+  - HexColor
+  - RgbColor
+  - HslColor
+  - AlphaColor
+  - ColorMode
+  - ColorSetDefinition
+  - ResolvedColorSet
+  - ColorToken
+  - TransformationRule
+
+rules:
+  - All color functions are pure (no side effects)
+  - Generator produces deterministic output for same input
+  - All hex colors normalized to 6-digit lowercase (#rrggbb)
+  - Alpha values are 0-1 float, not 0-255
+  - withAlpha returns structured { color, alpha } object, not CSS rgba() string
+  - Contrast ratio calculations follow WCAG 2.1
+  - isLight/isDark threshold is 0.179 relative luminance (WCAG standard)
+  - darken/lighten operate on absolute percent points in HSL lightness
+  - Component variables are optional overrides, not required

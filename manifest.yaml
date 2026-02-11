@@ -11,6 +11,30 @@ stack:
   test: vitest
   build_orchestrator: turborepo
 
+schemas:
+  path: schemas/
+  convention: "Each spec.yaml declares its schema via $schema field. Composable via $schema.compose: [...]"
+  composition_formula: "spec = base + lang [+ platform] [+ framework]"
+  base:
+    component: schemas/base/component.schema.yaml
+    token: schemas/base/token.schema.yaml
+    protocol: schemas/base/protocol.schema.yaml
+    function: schemas/base/function.schema.yaml
+    type: schemas/base/type.schema.yaml
+  lang:
+    typescript: schemas/lang/typescript.schema.yaml
+    kotlin: schemas/lang/kotlin.schema.yaml
+    swift: schemas/lang/swift.schema.yaml
+  platform:
+    web: schemas/platform/web.schema.yaml
+    ios: schemas/platform/ios.schema.yaml
+    compose: schemas/platform/compose.schema.yaml
+    react-native: schemas/platform/rn.schema.yaml
+  framework:
+    react: schemas/framework/react.schema.yaml
+    vue: schemas/framework/vue.schema.yaml
+    lit: schemas/framework/lit.schema.yaml
+
 domains:
   atoms:
     purpose: 최소 단위 UI 요소 — 단독으로 의미를 가지는 기본 블록

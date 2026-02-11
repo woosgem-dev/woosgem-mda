@@ -1,0 +1,185 @@
+# schemas/lang/kotlin.schema.yaml
+# Kotlin language schema — type system, signatures, sealed classes, nullability, generics.
+# Composed with base schemas to add Kotlin-specific type definitions.
+
+schema:
+  version: 2.0.0
+  layer: lang
+  language: kotlin
+  description: Kotlin type definitions, function signatures, nullability, generics, and coroutines
+
+# ─────────────────────────────────────────────
+# SECTION 1: Function Signatures
+# ─────────────────────────────────────────────
+
+function_signature:
+  fields:
+    signature:
+      type: string
+      required: true
+      format: kotlin-function-signature
+      description: "Full Kotlin function signature"
+      example: "fun <T : Any> filterNullish(obj: Map<String, T?>): Map<String, T>"
+    receiver:
+      type: string
+      required: false
+      description: "Extension function receiver type"
+      example: "Map<String, Any?>"
+    suspend:
+      type: boolean
+      required: false
+      default: false
+      description: "Whether this is a suspend function"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Type Definitions
+# ─────────────────────────────────────────────
+
+type_definition:
+  variants:
+    data_class:
+      fields:
+        definition:
+          type: string
+          required: true
+          description: "Full Kotlin data class definition"
+          example: "data class ButtonProps(val variant: ButtonVariant = ButtonVariant.Filled, ...)"
+        fields:
+          type: map
+          required: true
+          value_schema:
+            fields:
+              type: { type: string, required: true }
+              default: { required: false }
+              description: { type: string, required: true }
+
+    sealed_class:
+      fields:
+        definition:
+          type: string
+          required: true
+          description: "Sealed class/interface with exhaustive subtypes"
+          example: |
+            sealed class ButtonVariant {
+                object Filled : ButtonVariant()
+                object Outline : ButtonVariant()
+                object Ghost : ButtonVariant()
+                object Link : ButtonVariant()
+            }
+        subtypes:
+          type: "string[]"
+          required: true
+
+    enum_class:
+      fields:
+        definition:
+          type: string
+          required: true
+        values:
+          type: "string[]"
+          required: true
+
+    typealias:
+      fields:
+        definition:
+          type: string
+          required: true
+          example: "typealias HexColor = String"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Nullability
+# ─────────────────────────────────────────────
+
+nullability:
+  description: "Kotlin null safety system"
+  fields:
+    nullable_syntax:
+      type: string
+      const: "T?"
+      description: "Nullable type suffix"
+    non_null_assertion:
+      type: string
+      const: "!!"
+    safe_call:
+      type: string
+      const: "?."
+    elvis:
+      type: string
+      const: "?:"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Generics
+# ─────────────────────────────────────────────
+
+generics:
+  description: "Kotlin generics with declaration-site variance"
+  fields:
+    variance:
+      type: enum
+      values: [invariant, "in", "out"]
+      description: "Declaration-site variance (in = contravariant, out = covariant)"
+    reified:
+      type: boolean
+      required: false
+      description: "Reified type parameter (inline functions only)"
+    upper_bound:
+      type: string
+      required: false
+      description: "Type constraint (e.g., 'T : Comparable<T>')"
+    multiple_bounds:
+      type: "string[]"
+      required: false
+      description: "Multiple upper bounds via where clause"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Access Modifiers
+# ─────────────────────────────────────────────
+
+access_modifiers:
+  values: [public, internal, protected, private]
+  default: public
+  description: "Kotlin visibility modifiers"
+
+# ─────────────────────────────────────────────
+# SECTION 6: Coroutines
+# ─────────────────────────────────────────────
+
+coroutines:
+  description: "Kotlin coroutine primitives"
+  fields:
+    suspend:
+      type: boolean
+      required: false
+      description: "Suspend function marker"
+    flow:
+      type: string
+      required: false
+      description: "Flow type (Flow<T>, StateFlow<T>, SharedFlow<T>)"
+    scope:
+      type: string
+      required: false
+      description: "CoroutineScope requirement"
+
+# ─────────────────────────────────────────────
+# SECTION 7: Naming Conventions
+# ─────────────────────────────────────────────
+
+naming:
+  classes: PascalCase
+  functions: camelCase
+  constants: SCREAMING_SNAKE_CASE
+  packages: "lowercase dot-separated"
+  file_extension: ".kt"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - All signatures must be valid Kotlin syntax
+    - Sealed class subtypes must be exhaustive
+    - Data class must have at least one val parameter
+  warnings:
+    - Prefer sealed interface over sealed class for newer APIs
+    - Prefer data class over regular class for value types

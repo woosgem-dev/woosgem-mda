@@ -1,0 +1,232 @@
+# shared/utils/spec.yaml
+# Shared utility functions used by 2+ domains.
+# All functions are pure (no side effects), framework-agnostic.
+$schema: schemas/base/function.schema.yaml
+
+module:
+  name: utils
+  purpose: Pure utility functions shared across domains
+  phase: phase-2-candidate
+  consumers: all-domains
+
+# ─────────────────────────────────────────────
+# classNames
+# ─────────────────────────────────────────────
+
+functions:
+  classNames:
+    description: "Merge multiple CSS class sources into a single space-separated string"
+    signature: "(...args: ClassValue[]) => string"
+    pure: true
+
+    input_types:
+      ClassValue:
+        description: "Accepted argument types"
+        union:
+          - string
+          - number
+          - "undefined"
+          - "null"
+          - "false"
+          - "Record<string, boolean>"
+          - "ClassValue[]"
+
+    behavior:
+      - Strings are included as-is
+      - Falsy values (undefined, null, false, 0, empty string) are ignored
+      - Objects include keys whose values are truthy
+      - Arrays are recursively flattened
+      - Result is space-separated, trimmed, no duplicate spaces
+
+    examples:
+      - input: ["btn", "btn-primary"]
+        output: "btn btn-primary"
+      - input: ["btn", null, undefined, false, "active"]
+        output: "btn active"
+      - input: ["btn", { "btn-disabled": true, "btn-loading": false }]
+        output: "btn btn-disabled"
+      - input: ["btn", ["nested", ["deep"]]]
+        output: "btn nested deep"
+      - input: []
+        output: ""
+
+    test_cases:
+      - id: strings-only
+        given: ["foo", "bar", "baz"]
+        then: "foo bar baz"
+
+      - id: falsy-filtering
+        given: ["foo", null, undefined, false, "", 0, "bar"]
+        then: "foo bar"
+
+      - id: object-conditional
+        given: [{ active: true, disabled: false, loading: true }]
+        then: "active loading"
+
+      - id: mixed-types
+        given: ["base", { modifier: true }, ["extra"]]
+        then: "base modifier extra"
+
+      - id: empty-input
+        given: []
+        then: ""
+
+      - id: nested-arrays
+        given: [["a", ["b", ["c"]]]]
+        then: "a b c"
+
+      - id: all-falsy
+        given: [null, undefined, false, ""]
+        then: ""
+
+  # ─────────────────────────────────────────────
+  # mergeProps
+  # ─────────────────────────────────────────────
+
+  mergeProps:
+    description: "Merge multiple prop objects, composing event handlers and concatenating classNames"
+    signature: "(...sources: Record<string, unknown>[]) => Record<string, unknown>"
+    pure: true
+
+    behavior:
+      - Later sources override earlier ones for plain values
+      - "className" and "class" values are concatenated (space-separated)
+      - "style" objects are shallow-merged (later wins per property)
+      - "on*" event handlers are composed (all handlers called in order)
+      - "undefined" values do not override existing values
+
+    merge_rules:
+      className:
+        strategy: concatenate
+        description: "Space-separated join of all className values"
+      class:
+        strategy: concatenate
+        description: "Same as className, for Vue/Lit compatibility"
+      style:
+        strategy: shallow-merge
+        description: "Object.assign semantics — later properties win"
+      event_handlers:
+        pattern: "^on[A-Z]"
+        strategy: compose
+        description: "All handlers called left-to-right, exceptions do not block subsequent handlers"
+      other:
+        strategy: last-wins
+        description: "Simple override — last defined value wins"
+
+    examples:
+      - input:
+          - { className: "btn", onClick: "handler1" }
+          - { className: "primary", onClick: "handler2" }
+        output:
+          className: "btn primary"
+          onClick: "composed(handler1, handler2)"
+
+      - input:
+          - { style: { color: "red", fontSize: "14px" } }
+          - { style: { color: "blue" } }
+        output:
+          style: { color: "blue", fontSize: "14px" }
+
+    test_cases:
+      - id: plain-override
+        given:
+          - { id: "a", disabled: false }
+          - { disabled: true }
+        then: { id: "a", disabled: true }
+
+      - id: classname-concat
+        given:
+          - { className: "base" }
+          - { className: "extra" }
+        then: { className: "base extra" }
+
+      - id: event-composition
+        description: "Both onClick handlers should be called in order"
+        given:
+          - { onClick: "handlerA" }
+          - { onClick: "handlerB" }
+        then:
+          onClick: "composedHandler"
+        then_behavior: |
+          When result.onClick is invoked:
+          1. handlerA is called first
+          2. handlerB is called second
+          3. Both receive the same event argument
+          4. An exception in handlerA does not prevent handlerB from executing
+
+      - id: style-merge
+        given:
+          - { style: { color: "red", padding: "8px" } }
+          - { style: { color: "blue" } }
+        then: { style: { color: "blue", padding: "8px" } }
+
+      - id: undefined-no-override
+        given:
+          - { title: "hello" }
+          - { title: undefined }
+        then: { title: "hello" }
+
+      - id: empty-sources
+        given: []
+        then: {}
+
+  # ─────────────────────────────────────────────
+  # filterNullish
+  # ─────────────────────────────────────────────
+
+  filterNullish:
+    description: "Remove null and undefined values from an object"
+    signature: "<T extends Record<string, unknown>>(obj: T) => Partial<T>"
+    pure: true
+
+    behavior:
+      - Returns a new object (does not mutate input)
+      - Keys with null values are excluded
+      - Keys with undefined values are excluded
+      - All other values are preserved (including false, 0, empty string)
+
+    use_case: |
+      Prevents undefined props from overriding defaults when spreading.
+      Used in createComponent to clean style props before merging with defaults.
+
+    examples:
+      - input: { a: 1, b: null, c: undefined, d: "hello" }
+        output: { a: 1, d: "hello" }
+      - input: { x: false, y: 0, z: "" }
+        output: { x: false, y: 0, z: "" }
+
+    test_cases:
+      - id: remove-null-and-undefined
+        given: { a: 1, b: null, c: undefined, d: "ok" }
+        then: { a: 1, d: "ok" }
+
+      - id: preserve-falsy-non-nullish
+        given: { a: false, b: 0, c: "", d: null }
+        then: { a: false, b: 0, c: "" }
+
+      - id: empty-object
+        given: {}
+        then: {}
+
+      - id: all-nullish
+        given: { a: null, b: undefined }
+        then: {}
+
+      - id: no-mutation
+        description: "Input object must not be modified"
+        given: { a: 1, b: null }
+        then: { a: 1 }
+        invariant: "input object unchanged after call"
+
+# ─────────────────────────────────────────────
+# TYPE EXPORTS
+# ─────────────────────────────────────────────
+
+type_exports:
+  - ClassValue
+
+rules:
+  - All functions are pure — no side effects, no mutations
+  - Used by 2+ domains — single-domain utils belong in that domain
+  - No framework-specific logic (no React hooks, no Vue reactivity)
+  - No external dependencies — only language built-ins

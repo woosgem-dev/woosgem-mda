@@ -1,0 +1,338 @@
+# schemas/protocol.schema.yaml
+# Defines the structure for protocol module spec.yaml files.
+# Protocols are complex systems with input/output contracts and transformation rules.
+# Applies to: shared/csp/spec.yaml (and any future protocol modules)
+
+schema:
+  version: 2.0.0
+  description: Structure and constraints for protocol module spec.yaml files
+  applies_to: shared/csp/spec.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Module Header
+# ─────────────────────────────────────────────
+
+module_definition:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: kebab-case
+      description: "Module identifier, matches directory name"
+    purpose:
+      type: string
+      required: true
+      language: english
+      description: "One-line description of what this module provides"
+    phase:
+      type: enum
+      required: true
+      values: [permanent, phase-2-candidate, experimental]
+    consumers:
+      type: enum
+      required: true
+      values: [all-domains, specific]
+    consumer_list:
+      type: "string[]"
+      required: "when consumers=specific"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Required Sections
+# ─────────────────────────────────────────────
+
+required_sections: [module, input, output, transformations]
+optional_sections: [functions, generator, output_formats, rules]
+
+# ─────────────────────────────────────────────
+# SECTION 3: Input Definition
+# ─────────────────────────────────────────────
+
+input_definition:
+  description: "Input contract — what the protocol accepts"
+
+  fields:
+    description:
+      type: string
+      required: true
+      language: english
+    required_fields:
+      type: map
+      required: true
+      description: "Fields that must be provided"
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          format: { type: string, required: false }
+          description: { type: string, required: true, language: english }
+          example: { required: false }
+    optional_fields:
+      type: map
+      required: false
+      description: "Fields with defaults or auto-derivation"
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          default: { required: false, description: "Static default value" }
+          default_derivation:
+            required: false
+            description: "Structured derivation — how value is computed if not provided"
+            type: map
+            fields:
+              light: { type: object, required: true, fields: { fn: { type: string }, args: { type: array } } }
+              dark: { type: object, required: true, fields: { fn: { type: string }, args: { type: array } } }
+
+  validation:
+    - At least one required_field
+    - Optional fields must have either default or default_derivation
+    - All types must be from type_algebra or reference defined types
+
+# ─────────────────────────────────────────────
+# SECTION 4: Output Definition
+# ─────────────────────────────────────────────
+
+output_definition:
+  description: "Output contract — what the protocol produces"
+
+  fields:
+    description:
+      type: string
+      required: true
+      language: english
+    token_count:
+      type: number
+      required: false
+      description: "Total number of output tokens (for verification)"
+    variable_prefix:
+      type: string
+      required: false
+      description: "Common prefix for all output variables (e.g., '--wg-' for CSS)"
+    categories:
+      type: map
+      required: true
+      description: "Grouped output tokens"
+      value_schema:
+        fields:
+          count: { type: number, required: true }
+          tokens:
+            type: map
+            required: true
+            description: "Individual token definitions"
+            value_schema:
+              description: "Token derivation — one of four structured forms"
+              one_of:
+                - form: input
+                  description: "Direct from input field"
+                  fields:
+                    input: { type: string, required: true, description: "Dotted path to input field (e.g., 'primary.base')" }
+                    fallback: { type: map, required: false, description: "Mode-specific fallback if input absent" }
+                - form: transform
+                  description: "Apply a named transformation to a source token"
+                  fields:
+                    transform: { type: string, required: true, description: "Transformation rule name" }
+                    source: { type: string, required: true, description: "Source token name" }
+                - form: source
+                  description: "Alias to another resolved token"
+                  fields:
+                    source: { type: string, required: true, description: "Token name to alias" }
+                - form: default
+                  description: "Static per-mode value"
+                  fields:
+                    default:
+                      type: map
+                      required: true
+                      key_values: [light, dark]
+
+  validation:
+    - Sum of category counts must equal token_count
+    - Every token must use exactly one derivation form
+    - Transform references must use defined transformation names
+    - Input paths must reference valid input fields
+
+# ─────────────────────────────────────────────
+# SECTION 5: Transformation Definition
+# ─────────────────────────────────────────────
+
+transformation_definition:
+  description: "Named transformation rules for deriving values using structured DSL"
+
+  fields:
+    description:
+      type: string
+      required: true
+      language: english
+    rules:
+      type: map
+      required: true
+      description: "Named transformation rules"
+      value_schema:
+        description: "Each rule specifies behavior per mode using structured DSL"
+        fields:
+          light:
+            type: object
+            required: false
+            description: "Transformation for light mode"
+            fields:
+              fn: { type: string, required: true, description: "Function name from functions section" }
+              args: { type: array, required: true, description: "Arguments — strings reference tokens/inputs, numbers are literals" }
+          dark:
+            type: object
+            required: false
+            description: "Transformation for dark mode"
+            fields:
+              fn: { type: string, required: true }
+              args: { type: array, required: true }
+          both:
+            type: object
+            required: false
+            description: "Same transformation for both modes"
+            fields:
+              fn: { type: string, required: true }
+              args: { type: array, required: true }
+        constraints:
+          - Must have either (light AND dark) or both
+          - fn must reference a defined function name
+          - args must use concrete values (no natural language)
+
+  validation:
+    - All transformation names must be kebab-case or camelCase
+    - fn values must only use functions from the functions section
+    - Each rule must cover both light and dark modes
+
+# ─────────────────────────────────────────────
+# SECTION 6: Function Definition (optional for protocols)
+# ─────────────────────────────────────────────
+
+function_definition:
+  description: "Helper functions used by transformations"
+
+  fields:
+    description:
+      type: string
+      required: true
+      language: english
+    signature:
+      type: string
+      required: true
+    pure:
+      type: boolean
+      required: true
+    behavior:
+      type: "string[]"
+      required: true
+    test_cases:
+      type: "array"
+      required: true
+      min_items: 3
+      item_schema:
+        fields:
+          id: { type: string, required: true, format: kebab-case }
+          given: { required: true }
+          then: { required: true }
+
+  validation:
+    - Signature must follow the language syntax declared in the composed lang schema
+    - pure must be true
+    - test_cases.given and test_cases.then must be concrete literals
+
+# ─────────────────────────────────────────────
+# SECTION 7: Generator Definition
+# ─────────────────────────────────────────────
+
+generator_definition:
+  description: "Code generation API for protocol modules"
+
+  fields:
+    description:
+      type: string
+      required: false
+      language: english
+    api:
+      type: map
+      required: true
+      fields:
+        class: { type: string, required: true, format: PascalCase }
+        method: { type: string, required: true, format: camelCase }
+        input: { type: string, required: true, description: "Input type name" }
+        output: { type: string, required: true, description: "Output type name" }
+    built_in_presets:
+      type: map
+      required: false
+      description: "Named preset configurations"
+
+  validation:
+    - Input type must be defined in input section or types
+    - Output type must be defined in output section or types
+
+# ─────────────────────────────────────────────
+# SECTION 8: Output Format Definition
+# ─────────────────────────────────────────────
+
+output_format_definition:
+  description: "How protocol outputs are consumed across platforms (CSS, SCSS, TypeScript, Android XML, Compose, SwiftUI, etc.)"
+
+  fields:
+    formats:
+      type: map
+      required: true
+      value_schema:
+        fields:
+          description: { type: string, required: true, language: english }
+          file_pattern: { type: string, required: false, description: "Glob pattern for generated files" }
+          method: { type: string, required: false, format: camelCase, description: "Generator method name" }
+          example: { type: string, required: false, description: "Concrete output example" }
+    type_exports:
+      type: "string[]"
+      required: false
+      description: "Types this module exports"
+
+  validation:
+    - Each format must have description
+    - File patterns must be valid globs
+    - type_exports names must be PascalCase
+
+# ─────────────────────────────────────────────
+# SECTION 9: Rules
+# ─────────────────────────────────────────────
+
+rules_definition:
+  type: "string[]"
+  required: false
+  description: "Module-specific constraints and invariants"
+  constraints:
+    - Each rule must be a concrete, verifiable statement
+    - No ambiguous words (usually, sometimes, might)
+    - Language: english
+
+# ─────────────────────────────────────────────
+# SECTION 10: Language & Style Rules
+# ─────────────────────────────────────────────
+
+language_rules:
+  all_text: english
+  description_style: noun-phrase
+  no_ambiguous_words: ["usually", "sometimes", "might", "can be", "etc."]
+  null_convention: "Use YAML null (~) for absent values. Never 'undefined' string."
+
+# ─────────────────────────────────────────────
+# SECTION 11: Validation Checklist
+# ─────────────────────────────────────────────
+
+validation_checklist:
+  errors:
+    - Module header present with all required fields
+    - Protocol input has at least one required field
+    - Protocol output token counts match category sums
+    - Protocol token derivations use exactly one structured form (input/transform/source/default)
+    - Transformation rules use structured DSL (fn/args), not string formulas
+    - Transformation rules cover both modes
+    - Function signatures use valid syntax for the declared language
+    - Functions marked pure=true
+    - Function test_cases have 3+ concrete test cases
+    - All text in English
+    - No YAML string "undefined"
+
+  warnings:
+    - Protocol optional fields should have default or derivation
+    - Cross-module references should use valid paths
+    - Generator input/output types should reference defined types

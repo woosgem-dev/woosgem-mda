@@ -1,0 +1,335 @@
+# schemas/platform/compose.schema.yaml
+# Android/Compose platform schema — Composables, Modifier, Material 3, Semantics.
+# Layer 1 for Android. Combines platform + framework (Compose IS the platform).
+
+schema:
+  version: 2.0.0
+  layer: platform
+  platform: android
+  description: Android/Compose platform mapping — Composable, Modifier chain, TalkBack, Material 3
+  extends: base/component.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Composable Mapping
+# ─────────────────────────────────────────────
+
+composable:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: PascalCase
+      description: "Composable function name"
+    package:
+      type: string
+      required: true
+      description: "Kotlin package"
+      example: "com.woosgem.ui.atoms"
+    base:
+      type: enum
+      required: true
+      values: [material3, foundation, custom]
+      description: |
+        material3 — wraps androidx.compose.material3 component
+        foundation — uses compose.foundation primitives
+        custom — built from Box/Row/Column/Canvas
+    material_component:
+      type: string
+      required: false
+      description: "Fully qualified M3 component name (when base=material3)"
+      example: "androidx.compose.material3.Button"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Accessibility (Semantics / TalkBack)
+# ─────────────────────────────────────────────
+
+accessibility:
+  required: true
+  fields:
+    semantics:
+      type: map
+      required: true
+      fields:
+        role:
+          type: string
+          required: true
+          description: "Compose Role constant"
+          example: "Role.Button"
+        content_description:
+          type: map
+          required: false
+          fields:
+            source: { type: string, description: "Property or slot providing description" }
+            inherit: { type: boolean, description: "Auto-derive from text content" }
+        state_description:
+          type: array
+          required: false
+          item_schema:
+            fields:
+              when: { required: true, type: structured }
+              value: { type: string, required: true }
+        merge_descendants:
+          type: boolean
+          required: false
+          default: false
+          description: "Modifier.semantics(mergeDescendants = true) — merge child semantics for TalkBack"
+    talkback:
+      type: map
+      required: false
+      fields:
+        announces: { type: "string[]", description: "What TalkBack reads" }
+        focus_order: { type: enum, values: [inherit, custom], default: inherit }
+
+# ─────────────────────────────────────────────
+# SECTION 3: Modifier Chain
+# ─────────────────────────────────────────────
+
+modifier_chain:
+  required: true
+  description: "Default Modifier chain applied to the composable"
+  type: array
+  item_schema:
+    fields:
+      fn:
+        type: string
+        required: true
+        description: "Modifier function name"
+        example: "fillMaxWidth"
+      when: { required: false, type: structured }
+      args:
+        type: map
+        required: false
+        description: "Modifier arguments — token refs or literals"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Composable Parameters
+# ─────────────────────────────────────────────
+
+composable_params:
+  required: false
+  description: "Parameters for @Composable functions — defines the component API"
+  fields:
+    parameters:
+      type: map
+      required: true
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          default: { required: false }
+          description: { type: string, required: true }
+    modifier_param:
+      type: boolean
+      required: false
+      default: true
+      description: "Whether Modifier parameter is included (convention: always yes)"
+    content_lambda:
+      type: string
+      required: false
+      description: "Trailing lambda type"
+      example: "@Composable RowScope.() -> Unit"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Colors (Token Mapping)
+# ─────────────────────────────────────────────
+
+colors:
+  required: false
+  description: "Color mapping per variant/state"
+  fields:
+    strategy:
+      type: enum
+      values: [material_defaults, manual]
+      description: "material_defaults = ButtonDefaults.buttonColors(), manual = custom mapping"
+    mapping:
+      type: map
+      required: false
+      description: "Keys are variant/state combos, values are token references"
+      value_schema:
+        fields:
+          containerColor: { type: string, description: "Token reference" }
+          contentColor: { type: string }
+          border: { type: map, required: false }
+    dark_mode:
+      type: enum
+      values: [automatic, manual]
+      default: automatic
+
+# ─────────────────────────────────────────────
+# SECTION 6: State Handling
+# ─────────────────────────────────────────────
+
+state:
+  required: false
+  fields:
+    parameters:
+      type: array
+      required: false
+      description: "State passed as function parameters"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          hoisting: { type: enum, values: [required, optional], description: "Whether state must be hoisted" }
+    internal:
+      type: array
+      required: false
+      description: "State managed via remember/rememberSaveable"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          remember: { type: enum, values: [remember, rememberSaveable, derivedStateOf] }
+          default: { required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 7: Content Slot
+# ─────────────────────────────────────────────
+
+content_slot:
+  required: false
+  fields:
+    type:
+      type: string
+      required: true
+      description: "Lambda type for content"
+      example: "@Composable RowScope.() -> Unit"
+    scope:
+      type: string
+      required: false
+      description: "Receiver scope (RowScope, ColumnScope, BoxScope)"
+    wrapper:
+      type: string
+      required: false
+      description: "Container composable wrapping content"
+      example: "Row"
+    alignment: { type: string, required: false }
+    spacing: { required: false, description: "Token reference" }
+
+# ─────────────────────────────────────────────
+# SECTION 8: CompositionLocal
+# ─────────────────────────────────────────────
+
+composition_locals:
+  required: false
+  fields:
+    provides:
+      type: array
+      required: false
+      description: "CompositionLocal values this component provides"
+      item_schema:
+        fields:
+          local: { type: string, required: true, example: "LocalContentColor" }
+          from: { type: string, required: true, description: "Source of the value" }
+    consumes:
+      type: array
+      required: false
+      description: "CompositionLocal values this component reads"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Interaction Mapping
+# ─────────────────────────────────────────────
+
+interactions:
+  required: true
+  description: "Maps Layer 0 semantic triggers to Compose interactions"
+  fields:
+    _behavior_name:
+      type: map
+      fields:
+        compose_handler:
+          type: string
+          required: true
+          description: "Compose callback parameter name"
+          example: "onClick"
+        enabled:
+          required: false
+          type: structured
+          description: "Condition for enabling the interaction"
+        gesture:
+          type: string
+          required: false
+          description: "Modifier gesture (for non-standard interactions)"
+          example: "Modifier.combinedClickable(onLongClick = ...)"
+
+# ─────────────────────────────────────────────
+# SECTION 10: InteractionSource
+# ─────────────────────────────────────────────
+
+interaction_source:
+  required: false
+  description: "Compose InteractionSource for custom interaction feedback"
+  fields:
+    collect:
+      type: "string[]"
+      required: false
+      description: "Interaction states to collect"
+      example: ["isPressed", "isHovered", "isFocused", "isDragged"]
+    custom_indication:
+      type: boolean
+      required: false
+      description: "Uses custom Indication instead of default ripple"
+
+# ─────────────────────────────────────────────
+# SECTION 11: Animation
+# ─────────────────────────────────────────────
+
+animation:
+  required: false
+  fields:
+    state_transitions:
+      type: map
+      required: false
+      description: "Animated state changes"
+      value_schema:
+        fields:
+          spec: { type: string, description: "Animation spec (tween, spring, etc.)" }
+          properties: { type: "string[]", description: "Animated properties" }
+
+# ─────────────────────────────────────────────
+# SECTION 12: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    semantic_matcher:
+      type: string
+      required: false
+      description: "Compose test assertion pattern"
+      example: "hasClickAction() and hasText()"
+    test_tag:
+      type: string
+      required: false
+      description: "testTag pattern for Modifier.testTag()"
+
+# ─────────────────────────────────────────────
+# SECTION 13: Dependencies
+# ─────────────────────────────────────────────
+
+dependencies:
+  required: false
+  fields:
+    compose_artifacts:
+      type: "string[]"
+      required: false
+      description: "Required Compose dependencies"
+      example:
+        - "androidx.compose.material3:material3"
+        - "androidx.compose.foundation:foundation"
+
+# ─────────────────────────────────────────────
+# SECTION 14: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - composable.name must be PascalCase
+    - Composable functions must be PascalCase
+    - All interactions must reference behaviors defined in Layer 0
+    - semantics.role must be a valid Compose Role constant
+    - Content slot scope must be a valid Compose scope (RowScope, ColumnScope, BoxScope)
+  warnings:
+    - Prefer Material 3 base over custom when possible
+    - CompositionLocal should be documented if used
+    - State hoisting should be preferred over internal state

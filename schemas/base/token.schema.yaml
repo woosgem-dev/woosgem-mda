@@ -1,0 +1,244 @@
+# schemas/token.schema.yaml
+# Defines the structure for design token spec.yaml files.
+# Applies to: shared/tokens/spec.yaml (and any future domain-level token overrides)
+
+schema:
+  version: 2.0.0
+  description: Structure and constraints for token module spec.yaml files
+  applies_to: shared/tokens/spec.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Module Header
+# ─────────────────────────────────────────────
+
+module_definition:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: kebab-case
+      description: "Module identifier, matches directory name"
+    purpose:
+      type: string
+      required: true
+      language: english
+      description: "One-line description of what this module provides"
+    phase:
+      type: enum
+      required: true
+      values: [permanent, phase-2-candidate, experimental]
+    consumers:
+      type: enum
+      required: true
+      values: [all-domains, specific]
+    consumer_list:
+      type: "string[]"
+      required: "when consumers=specific"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Required Sections
+# ─────────────────────────────────────────────
+
+required_sections: [module, token_scales, output]
+optional_sections: [conventions, rules]
+
+# ─────────────────────────────────────────────
+# SECTION 3: Conventions
+# ─────────────────────────────────────────────
+
+conventions_definition:
+  description: "Documentation of how token values are interpreted across platforms"
+  fields:
+    value_format:
+      type: string
+      required: true
+      description: "Explanation of the value format (e.g., unitless numbers)"
+    unit_mapping:
+      type: map
+      required: true
+      description: "How abstract token types map to platform-specific units"
+      value_schema:
+        fields:
+          web: { type: string, required: true }
+          android: { type: string, required: true }
+          ios: { type: string, required: true }
+    mode_invariance:
+      type: string
+      required: false
+      description: "Statement about mode independence (light/dark)"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Token Scale Definition
+# ─────────────────────────────────────────────
+
+token_scale_definition:
+  description: "A named set of key-value pairs representing a design token scale (DTCG-compatible)"
+
+  fields:
+    $type:
+      type: enum
+      required: false
+      values: [dimension, number, duration, cubicBezier, fontFamily, fontWeight]
+      description: "DTCG token type annotation — declares the semantic type of scale values"
+    description:
+      type: string
+      required: false
+      language: english
+    base_unit:
+      type: number
+      required: false
+      description: "Base reference value for the scale (e.g., 4 for spacing where 4=4px/4dp/4pt)"
+    scale:
+      type: map
+      required: true
+      description: "Key-value pairs defining the token scale"
+      key_format: "string or number"
+      value_format: "unitless number, array, or structured object"
+      constraints:
+        - Keys must be unique within the scale
+        - Values are unitless — platform units attached at build time
+        - Order should be ascending (smallest to largest)
+    output_patterns:
+      type: map
+      required: true
+      description: "Platform-specific output name templates"
+      fields:
+        css:
+          type: string
+          required: true
+          format: "pattern with {key} placeholder"
+          example: "--wg-spacing-{key}"
+        scss:
+          type: string
+          required: false
+          format: "pattern with {key} placeholder"
+        android:
+          type: string
+          required: false
+          format: "pattern with {key} placeholder"
+        ios:
+          type: string
+          required: false
+          format: "pattern with {key} placeholder"
+        compose:
+          type: string
+          required: false
+          format: "pattern with {key} placeholder"
+    platform_mapping:
+      type: map
+      required: false
+      description: "Platform-specific value mapping (e.g., breakpoints → WindowSizeClass)"
+    platform_notes:
+      type: map
+      required: false
+      description: "Per-platform formatting notes (e.g., easing syntax differences)"
+
+  validation:
+    - Scale must have 2+ entries
+    - output_patterns.css must contain {key}
+    - All values must be parseable (no natural language)
+    - Values must be unitless numbers, arrays, or structured objects
+
+# ─────────────────────────────────────────────
+# SECTION 5: Semantic Token Definition
+# ─────────────────────────────────────────────
+
+semantic_token_definition:
+  description: "Composed tokens that reference base scale values"
+
+  fields:
+    description:
+      type: string
+      required: false
+      language: english
+    tokens:
+      type: map
+      required: true
+      description: "Named composed tokens"
+      value_schema:
+        description: "Each token is a map of property references"
+        fields:
+          _any_property:
+            type: string
+            description: "Reference to a base scale key"
+    output_patterns:
+      type: map
+      required: true
+      description: "Platform-specific output name templates"
+      fields:
+        css: { type: string, required: true, format: "pattern with {token} and {property} placeholders" }
+        scss: { type: string, required: false }
+        android: { type: string, required: false }
+        ios: { type: string, required: false }
+    output_properties:
+      type: "string[]"
+      required: false
+      description: "Enumerated property names emitted per token (e.g., [size, weight, line_height, family])"
+
+  validation:
+    - All property references must point to valid scale keys
+    - Token names must be unique
+    - Token names must use kebab-case
+
+# ─────────────────────────────────────────────
+# SECTION 6: Output Contract
+# ─────────────────────────────────────────────
+
+output_definition:
+  description: "How token outputs are consumed across platforms"
+  fields:
+    platforms:
+      type: map
+      required: true
+      description: "Supported platforms and their output formats"
+      value_schema:
+        fields:
+          formats: { type: "string[]", required: true }
+          unit_system: { type: string, required: true }
+    type_exports:
+      type: "string[]"
+      required: false
+      description: "Types this module exports"
+
+# ─────────────────────────────────────────────
+# SECTION 7: Rules
+# ─────────────────────────────────────────────
+
+rules_definition:
+  type: "string[]"
+  required: false
+  description: "Module-specific constraints and invariants"
+  constraints:
+    - Each rule must be a concrete, verifiable statement
+    - No ambiguous words (usually, sometimes, might)
+    - Language: english
+
+# ─────────────────────────────────────────────
+# SECTION 8: Language & Style Rules
+# ─────────────────────────────────────────────
+
+language_rules:
+  all_text: english
+  description_style: noun-phrase
+  no_ambiguous_words: ["usually", "sometimes", "might", "can be", "etc."]
+  null_convention: "Use YAML null (~) for absent values. Never 'undefined' string."
+
+# ─────────────────────────────────────────────
+# SECTION 9: Validation Checklist
+# ─────────────────────────────────────────────
+
+validation_checklist:
+  errors:
+    - Module header present with all required fields
+    - Token scales have 2+ entries with parseable values
+    - Token scales have output_patterns with at least css containing {key}
+    - Token values are unitless numbers, arrays, or structured objects (no CSS unit strings)
+    - Semantic token property references point to valid scale keys
+    - All text in English
+    - No YAML string "undefined"
+
+  warnings:
+    - Token type_exports should match scale keys
+    - Semantic tokens should reference existing scale keys
+    - Token $type should match DTCG type vocabulary when applicable

@@ -1,0 +1,413 @@
+# schemas/framework/vue.schema.yaml
+# Vue framework schema — SFC, Composition API, defineModel, defineSlots, provide/inject.
+# Layer 2 for Vue. Builds on top of web platform (Layer 1).
+# Targets Vue 3.4+ (defineModel, defineSlots, generic components).
+
+schema:
+  version: 2.0.0
+  layer: framework
+  framework: vue
+  description: Vue implementation patterns — SFC, Composition API, defineModel, typed slots, provide/inject
+  extends: platform/web.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: SFC Definition
+# ─────────────────────────────────────────────
+
+sfc:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: PascalCase
+    min_version:
+      type: string
+      required: false
+      default: "3.4"
+      description: "Minimum Vue version required"
+    script_setup:
+      type: boolean
+      required: true
+      default: true
+      description: "Uses <script setup> syntax"
+    generic:
+      type: string
+      required: false
+      description: "<script setup generic='T extends ...'> type parameter (Vue 3.3+)"
+      example: "T extends string | number"
+    inherit_attrs:
+      type: boolean
+      required: false
+      default: true
+      description: "inheritAttrs option (set via defineOptions if false)"
+    export:
+      type: enum
+      required: true
+      values: [named, default]
+      default: named
+
+# ─────────────────────────────────────────────
+# SECTION 2: Props (defineProps)
+# ─────────────────────────────────────────────
+
+props:
+  required: true
+  fields:
+    define_props:
+      type: map
+      required: true
+      description: "Props defined via defineProps<T>()"
+      value_schema:
+        fields:
+          type: { type: string, required: true, description: "TypeScript type" }
+          required: { type: boolean, required: true }
+          default: { required: false }
+          validator: { type: string, required: false, description: "Custom validator function" }
+    with_defaults:
+      type: map
+      required: false
+      description: "withDefaults() for complex defaults (object/array values)"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Emits (defineEmits)
+# ─────────────────────────────────────────────
+
+emits:
+  required: true
+  description: "Maps Layer 0 behaviors to Vue emits. Uses type-based declaration (Vue 3.3+)."
+  fields:
+    declaration:
+      type: string
+      required: false
+      description: "Full defineEmits type signature"
+      example: |
+        defineEmits<{
+          click: [event: MouseEvent]
+          'update:modelValue': [value: string]
+        }>()
+    _behavior_name:
+      type: map
+      fields:
+        event_name:
+          type: string
+          required: true
+          description: "Vue event name (camelCase in TS, kebab-case in template)"
+          example: "update:modelValue"
+        payload_type:
+          type: string
+          required: true
+          description: "TypeScript type for the event payload (labeled tuple syntax)"
+          example: "[value: string]"
+
+# ─────────────────────────────────────────────
+# SECTION 4: defineModel (Vue 3.4+)
+# ─────────────────────────────────────────────
+
+define_model:
+  required: false
+  description: "defineModel() — two-way binding (replaces manual modelValue prop + update:modelValue emit)"
+  fields:
+    default:
+      type: map
+      required: false
+      description: "Default v-model (modelValue)"
+      fields:
+        type: { type: string, required: true }
+        required: { type: boolean, required: false, default: false }
+        default: { required: false }
+    named:
+      type: map
+      required: false
+      description: "Named v-model bindings (v-model:name)"
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          required: { type: boolean, required: false, default: false }
+          default: { required: false }
+      example:
+        checked: { type: boolean }
+        indeterminate: { type: boolean }
+
+# ─────────────────────────────────────────────
+# SECTION 5: defineSlots (Vue 3.3+)
+# ─────────────────────────────────────────────
+
+define_slots:
+  required: false
+  description: "defineSlots<T>() — type-safe slot declarations"
+  fields:
+    _slot_name:
+      type: map
+      fields:
+        props:
+          type: map
+          required: false
+          description: "Scoped slot props type"
+        description: { type: string, required: true }
+        fallback: { type: string, required: false, description: "Default slot content" }
+  example:
+    default: { props: { item: "T" }, description: "Default content with scoped data" }
+    header: { description: "Header area" }
+    empty: { description: "Empty state fallback" }
+
+# ─────────────────────────────────────────────
+# SECTION 6: Composables
+# ─────────────────────────────────────────────
+
+composables:
+  required: false
+  fields:
+    reactive_state:
+      type: array
+      required: false
+      description: "ref() and reactive() declarations"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: enum, values: [ref, reactive, shallowRef, shallowReactive, useTemplateRef], required: true }
+          value_type: { type: string, required: true, description: "TypeScript type" }
+          default: { required: false }
+    computed:
+      type: array
+      required: false
+      description: "computed() declarations"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true, description: "Return type" }
+          deps: { type: "string[]", required: false, description: "Reactive dependencies (for documentation)" }
+    watchers:
+      type: array
+      required: false
+      description: "watch() / watchEffect() declarations"
+      item_schema:
+        fields:
+          type: { type: enum, values: [watch, watchEffect], required: true }
+          source: { type: "string[]", required: "when type=watch" }
+          purpose: { type: string, required: true }
+          options:
+            type: map
+            required: false
+            description: "Watch options"
+            fields:
+              immediate: { type: boolean, required: false }
+              deep: { type: boolean, required: false }
+              flush: { type: enum, values: [pre, post, sync], required: false }
+              once: { type: boolean, required: false }
+    custom:
+      type: array
+      required: false
+      description: "Custom composables used by this component"
+      item_schema:
+        fields:
+          name: { type: string, required: true, description: "Composable name (must start with 'use')" }
+          source: { type: string, required: false, description: "Import path" }
+          purpose: { type: string, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 7: Lifecycle Hooks
+# ─────────────────────────────────────────────
+
+lifecycle:
+  required: false
+  fields:
+    onMounted:
+      type: map
+      required: false
+      fields:
+        purpose: { type: string, required: true }
+    onUnmounted:
+      type: map
+      required: false
+      fields:
+        cleanup: { type: "string[]", required: true, description: "Resources to clean up" }
+    onBeforeMount: { type: map, required: false, fields: { purpose: { type: string, required: true } } }
+    onBeforeUnmount: { type: map, required: false, fields: { purpose: { type: string, required: true } } }
+    onUpdated: { type: map, required: false, fields: { purpose: { type: string, required: true } } }
+    onActivated:
+      type: map
+      required: false
+      description: "KeepAlive activation"
+      fields:
+        purpose: { type: string, required: true }
+    onDeactivated:
+      type: map
+      required: false
+      description: "KeepAlive deactivation"
+      fields:
+        purpose: { type: string, required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 8: Provide / Inject
+# ─────────────────────────────────────────────
+
+provide_inject:
+  required: false
+  fields:
+    provides:
+      type: array
+      required: false
+      description: "Values provided to descendants"
+      item_schema:
+        fields:
+          key: { type: string, required: true, description: "InjectionKey symbol name" }
+          type: { type: string, required: true }
+          source: { type: string, required: true, description: "Value source (prop, ref, computed)" }
+    injects:
+      type: array
+      required: false
+      description: "Values injected from ancestors"
+      item_schema:
+        fields:
+          key: { type: string, required: true }
+          type: { type: string, required: true }
+          default: { required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 9: Template Patterns
+# ─────────────────────────────────────────────
+
+template:
+  required: false
+  fields:
+    directives:
+      type: "string[]"
+      required: false
+      description: "Custom directives used (v-click-outside, etc.)"
+    transition:
+      type: map
+      required: false
+      description: "Vue Transition/TransitionGroup usage"
+      fields:
+        component:
+          type: enum
+          required: true
+          values: [Transition, TransitionGroup]
+          default: Transition
+        name: { type: string, required: true }
+        mode: { type: enum, values: [in-out, out-in, default], default: default }
+        appear: { type: boolean, required: false, default: false, description: "Animate on initial render" }
+        duration: { type: union, types: [number, map], required: false, description: "Explicit duration (ms)" }
+        css: { type: boolean, required: false, default: true, description: "false for JS-only transitions" }
+        js_hooks:
+          type: "string[]"
+          required: false
+          description: "JavaScript transition hooks used"
+          example: ["onBeforeEnter", "onEnter", "onAfterEnter", "onLeave"]
+    teleport:
+      type: map
+      required: false
+      description: "Teleport target for overlay components"
+      fields:
+        to: { type: string, required: true, example: "body" }
+        disabled: { type: string, required: false, description: "Condition to disable teleport" }
+
+# ─────────────────────────────────────────────
+# SECTION 10: Expose (defineExpose)
+# ─────────────────────────────────────────────
+
+expose:
+  required: false
+  description: "Methods/properties exposed to parent via template ref (defineExpose)"
+  type: map
+  value_schema:
+    fields:
+      type: { type: string, required: true }
+      description: { type: string, required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 11: Async / Suspense
+# ─────────────────────────────────────────────
+
+async:
+  required: false
+  fields:
+    suspensible:
+      type: boolean
+      required: false
+      description: "Works with <Suspense> component"
+    async_setup:
+      type: boolean
+      required: false
+      description: "Uses top-level await in <script setup>"
+    define_async_component:
+      type: boolean
+      required: false
+      description: "Lazy-loadable via defineAsyncComponent()"
+
+# ─────────────────────────────────────────────
+# SECTION 12: Styling (Vue-specific only)
+# ─────────────────────────────────────────────
+
+styling:
+  required: false
+  description: "Vue SFC-specific styling features (project-wide strategy lives in manifest.yaml)"
+  fields:
+    scoped:
+      type: boolean
+      required: false
+      default: true
+      description: "<style scoped>"
+    css_modules:
+      type: boolean
+      required: false
+      description: "<style module>"
+    v_bind:
+      type: map
+      required: false
+      description: "CSS custom properties bound via v-bind() in <style>"
+      example:
+        color: "props.color"
+        bg: "computedBg"
+    deep_selectors:
+      type: "string[]"
+      required: false
+      description: ":deep() selectors for styling child components"
+    slotted_selectors:
+      type: "string[]"
+      required: false
+      description: ":slotted() selectors for styling slotted content"
+
+# ─────────────────────────────────────────────
+# SECTION 13: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    library:
+      type: enum
+      values: [vue-test-utils, testing-library-vue]
+      default: vue-test-utils
+    mount_options:
+      type: map
+      required: false
+      description: "Default mount/shallowMount options"
+    queries:
+      type: "string[]"
+      required: false
+      example: ["wrapper.find('[data-testid=\"...\"]')", "wrapper.findComponent(Button)"]
+
+# ─────────────────────────────────────────────
+# SECTION 14: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - sfc.name must be PascalCase
+    - All emits must reference behaviors defined in Layer 0
+    - define_model components must NOT also define manual modelValue prop + update:modelValue emit
+    - Custom composables must start with 'use'
+    - define_slots props must be typed
+    - Generic components must declare sfc.generic
+    - async_setup components must be wrapped in <Suspense>
+    - Form components (Layer 0 control section) must define define_model
+  warnings:
+    - Prefer defineModel() over manual v-model pattern (Vue 3.4+)
+    - Prefer defineSlots() over runtime slot checking (Vue 3.3+)
+    - Prefer ref() over reactive() for primitives
+    - Prefer useTemplateRef() over ref() for DOM refs (Vue 3.5+)
+    - Avoid mutating props directly — use defineModel or emit events
+    - Use defineOptions() for component options in script setup
+    - Overlay components should use template.teleport

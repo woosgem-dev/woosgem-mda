@@ -1,0 +1,250 @@
+# schemas/platform/rn.schema.yaml
+# React Native platform schema — cross-platform mobile (iOS + Android).
+# Layer 1 for React Native. RN is its own platform, not a child of web.
+
+schema:
+  version: 2.0.0
+  layer: platform
+  platform: react-native
+  description: React Native platform mapping — native components, StyleSheet, accessibility
+  extends: base/component.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Component Mapping
+# ─────────────────────────────────────────────
+
+component:
+  required: true
+  fields:
+    base:
+      type: string
+      required: true
+      description: "RN core component used as base"
+      example: "Pressable"
+      allowed:
+        - View
+        - Text
+        - Pressable
+        - TouchableOpacity
+        - TextInput
+        - ScrollView
+        - FlatList
+        - Modal
+        - Switch
+    custom:
+      type: boolean
+      required: true
+      description: "false = wraps RN core, true = fully custom"
+    platform_specific:
+      type: map
+      required: false
+      description: "Platform-specific imports via Platform.select"
+      fields:
+        ios: { type: string, required: false }
+        android: { type: string, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 2: Accessibility
+# ─────────────────────────────────────────────
+
+accessibility:
+  required: true
+  fields:
+    accessible: { type: boolean, required: true, default: true }
+    accessibilityRole:
+      type: enum
+      required: true
+      values: [button, link, search, image, text, adjustable, header, summary, alert, checkbox, radio, switch, tab, menu, menuitem, progressbar, scrollbar, spinbutton, timer, toolbar, none]
+    accessibilityLabel:
+      type: map
+      required: true
+      fields:
+        source: { type: string, description: "Property or slot providing label" }
+    accessibilityState:
+      type: map
+      required: false
+      description: "Dynamic accessibility state"
+      fields:
+        disabled: { type: string, required: false, description: "Property source" }
+        busy: { type: string, required: false }
+        checked: { type: string, required: false }
+        selected: { type: string, required: false }
+    accessibilityValue:
+      type: map
+      required: false
+      description: "Numeric/text accessibility value (for sliders, progress, etc.)"
+      fields:
+        min: { type: number, required: false }
+        max: { type: number, required: false }
+        now: { type: string, required: false, description: "Property source for current value" }
+        text: { type: string, required: false, description: "Text representation" }
+    accessibilityHint:
+      type: map
+      required: false
+    accessibilityActions:
+      type: array
+      required: false
+      description: "Custom accessibility actions"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Styling (StyleSheet)
+# ─────────────────────────────────────────────
+
+styling:
+  required: true
+  fields:
+    base_style:
+      type: map
+      required: true
+      description: "Default StyleSheet properties"
+    variant_styles:
+      type: map
+      required: false
+      description: "Per-variant style overrides"
+    state_styles:
+      type: map
+      required: false
+      description: "Per-state style changes"
+    token_mapping:
+      type: map
+      required: false
+      description: "Property → token reference mapping"
+      example:
+        padding: "spacing.4"
+        borderRadius: "radius.md"
+    platform_styles:
+      type: map
+      required: false
+      description: "Platform.select style overrides"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Interaction Mapping
+# ─────────────────────────────────────────────
+
+interactions:
+  required: true
+  description: "Maps Layer 0 semantic triggers to RN events"
+  fields:
+    _behavior_name:
+      type: map
+      fields:
+        rn_handler:
+          type: string
+          required: true
+          description: "RN event prop name"
+          example: "onPress"
+        haptic:
+          type: enum
+          required: false
+          values: [impactLight, impactMedium, impactHeavy, selection, notificationSuccess, notificationWarning, notificationError, none]
+        pressable_style:
+          type: map
+          required: false
+          description: "Style changes when pressed (Pressable)"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Animation
+# ─────────────────────────────────────────────
+
+animation:
+  required: false
+  fields:
+    library:
+      type: enum
+      values: [animated, reanimated, moti]
+      default: reanimated
+      description: "Animation library to use"
+    state_transitions:
+      type: map
+      required: false
+    entering: { type: string, required: false, description: "Enter animation" }
+    exiting: { type: string, required: false, description: "Exit animation" }
+
+# ─────────────────────────────────────────────
+# SECTION 6: Gestures
+# ─────────────────────────────────────────────
+
+gestures:
+  required: false
+  fields:
+    pan:
+      type: map
+      required: false
+      fields:
+        handler: { type: string, required: true }
+        min_distance: { type: number, required: false }
+    long_press:
+      type: map
+      required: false
+      fields:
+        handler: { type: string, required: true }
+        duration: { type: number, required: false, description: "Minimum press duration (ms)" }
+    pinch:
+      type: map
+      required: false
+    swipe:
+      type: map
+      required: false
+      fields:
+        directions: { type: "string[]", required: true, description: "Allowed swipe directions" }
+        handler: { type: string, required: true }
+    library:
+      type: enum
+      values: [react-native-gesture-handler, built-in]
+      default: react-native-gesture-handler
+
+# ─────────────────────────────────────────────
+# SECTION 7: Dark Mode
+# ─────────────────────────────────────────────
+
+dark_mode:
+  required: false
+  fields:
+    strategy:
+      type: enum
+      values: [automatic, manual]
+      default: automatic
+      description: "automatic = uses CSP tokens that adapt, manual = explicit overrides"
+    color_scheme_listener:
+      type: boolean
+      required: false
+      description: "Listens to Appearance.getColorScheme()"
+    overrides:
+      type: map
+      required: false
+      description: "Per-mode style overrides"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Layout
+# ─────────────────────────────────────────────
+
+layout:
+  required: false
+  fields:
+    flex: { type: map, required: false, description: "Flexbox properties" }
+    safe_area: { type: boolean, required: false, description: "Wrap in SafeAreaView" }
+    keyboard_avoiding: { type: boolean, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 9: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    testID: { type: string, required: false, description: "testID pattern" }
+    accessibility_test: { type: boolean, default: true }
+
+# ─────────────────────────────────────────────
+# SECTION 10: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - component.base must be a valid RN core component
+    - All interactions must reference behaviors defined in Layer 0
+    - accessibilityRole must be a valid RN accessibility role
+  warnings:
+    - Prefer Pressable over TouchableOpacity (newer API)
+    - Platform-specific styles should be minimized
+    - Haptic feedback should be consistent across platforms

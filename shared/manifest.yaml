@@ -1,43 +1,132 @@
 shared:
-  purpose: 2+ 도메인이 사용하는 공통 코드
+  purpose: Common code used by 2+ domains
+  version: 0.1.0
 
   modules:
     tokens:
-      purpose: 디자인 토큰 — spacing, typography, color primitives
+      purpose: Design tokens — spacing, typography, breakpoints, radius, elevation, motion
       phase: permanent
       spec: tokens/spec.yaml
+      consumers: all-domains
       files:
         - tokens/spacing.ts
         - tokens/typography.ts
-        - tokens/colors.ts
         - tokens/breakpoints.ts
+        - tokens/radius.ts
+        - tokens/elevation.ts
+        - tokens/motion.ts
+        - tokens/sizes.ts
+        - tokens/index.ts
+      type_exports:
+        - SpacingKey
+        - RadiusKey
+        - SizeKey
+        - IconSizeKey
+        - ContainerHeightKey
+        - ElevationKey
+        - BreakpointKey
+        - FontFamilyKey
+        - TypeScaleKey
+        - FontWeightKey
+        - LineHeightKey
+        - LetterSpacingKey
+        - TypeTokenKey
+        - DurationKey
+        - EasingKey
+        - MotionKey
 
     csp:
-      purpose: Color Set Protocol — 최소 색상 입력 → 81개 토큰 자동 생성
+      purpose: Color Set Protocol — minimal color input generates 81 design tokens
       phase: permanent
       spec: csp/spec.yaml
+      consumers: all-domains
       files:
         - csp/generator.ts
-        - csp/transformers.ts
+        - csp/transformer.ts
+        - csp/transformations.ts
         - csp/validators.ts
+        - csp/presets.ts
+        - csp/output-generators.ts
+        - csp/component-vars.ts
         - csp/types.ts
+        - csp/index.ts
+      type_exports:
+        - HexColor
+        - RgbColor
+        - HslColor
+        - AlphaColor
+        - ColorMode
+        - ColorSetDefinition
+        - ResolvedColorSet
+        - ColorToken
+        - TransformationRule
+        - TransformationDSL
+        - SemanticColor
+        - TextColor
+        - BackgroundColor
+        - BorderColor
+        - ComponentVars
 
     utils:
-      purpose: 순수 유틸리티 함수
+      purpose: Pure utility functions (no side effects, no framework dependencies)
       phase: phase-2-candidate
       spec: utils/spec.yaml
+      consumers: all-domains
       files:
         - utils/class-names.ts
         - utils/merge-props.ts
+        - utils/filter-nullish.ts
+        - utils/index.ts
+      type_exports:
+        - ClassValue
 
     types:
-      purpose: 크로스 도메인 타입 정의
+      purpose: Cross-domain type definitions — component contracts, token keys, color types
       phase: phase-2-candidate
+      spec: types/spec.yaml
+      consumers: all-domains
       files:
         - types/component-definition.ts
-        - types/style-props.ts
+        - types/token-keys.ts
+        - types/color-types.ts
+        - types/utility-types.ts
+        - types/index.ts
+      type_exports:
+        # Core
+        - ComponentDefinition
+        - ExtractStyleProps
+        - ExtractAttrs
+        - ExtractTag
+        - Prettify
+        # Token keys
+        - SpacingKey
+        - RadiusKey
+        - SizeKey
+        - IconSizeKey
+        - ContainerHeightKey
+        - ElevationKey
+        - BreakpointKey
+        - FontFamilyKey
+        - TypeScaleKey
+        - FontWeightKey
+        - LineHeightKey
+        - LetterSpacingKey
+        - TypeTokenKey
+        - DurationKey
+        - EasingKey
+        - MotionKey
+        # Color
+        - HexColor
+        - ColorMode
+        - SemanticColor
+        - TextColor
+        - BackgroundColor
+        - BorderColor
+        - ComponentVars
 
   rules:
-    - 단일 도메인만 사용하는 코드는 해당 도메인으로 이동
-    - utils는 순수 함수만 (부수 효과 금지)
-    - tokens 변경 시 모든 도메인에 영향 — 반드시 .decisions/ 기록
+    - Code used by only one domain must move to that domain
+    - Utils must be pure functions (no side effects)
+    - Token changes affect all domains — require .decisions/ record
+    - No framework-specific logic in shared modules
+    - All shared code must have a spec before implementation

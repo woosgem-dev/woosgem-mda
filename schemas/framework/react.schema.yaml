@@ -1,0 +1,423 @@
+# schemas/framework/react.schema.yaml
+# React framework schema — JSX, hooks, Context, Server Components, portals.
+# Layer 2 for React. Builds on top of web platform (Layer 1).
+
+schema:
+  version: 2.0.0
+  layer: framework
+  framework: react
+  description: React implementation patterns — component, hooks, ref, Context, RSC, portals
+  extends: platform/web.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Component Definition
+# ─────────────────────────────────────────────
+
+react_component:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: PascalCase
+    export:
+      type: enum
+      required: true
+      values: [named, default]
+      default: named
+    pattern:
+      type: enum
+      required: false
+      values: [flat, compound]
+      default: flat
+      description: |
+        flat — single component file
+        compound — parent with static sub-components (Tabs.Tab, Modal.Header)
+
+# ─────────────────────────────────────────────
+# SECTION 2: Compatibility
+# ─────────────────────────────────────────────
+
+compatibility:
+  required: false
+  fields:
+    react_version:
+      type: string
+      required: false
+      default: ">=18"
+    server_component:
+      type: boolean
+      required: false
+      default: false
+      description: |
+        false = requires "use client" directive (uses hooks, browser APIs)
+        true = safe for RSC (no useState, useEffect, useRef, event handlers)
+    concurrent_safe:
+      type: boolean
+      required: false
+      default: true
+      description: "No external mutable refs, proper effect cleanup"
+    strict_mode_safe:
+      type: boolean
+      required: false
+      default: true
+      description: "Handles double-invoke of effects in StrictMode"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Props Interface
+# ─────────────────────────────────────────────
+
+props:
+  required: true
+  fields:
+    interface_name:
+      type: string
+      required: true
+      format: PascalCase
+      description: "Props type name (e.g., ButtonProps)"
+    extends:
+      type: "string[]"
+      required: false
+      description: "Interfaces this props type extends"
+      example: ["React.ButtonHTMLAttributes<HTMLButtonElement>"]
+    omit:
+      type: "string[]"
+      required: false
+      description: "Props omitted from extended interface"
+    children:
+      type: map
+      required: false
+      description: "React children prop configuration"
+      fields:
+        type: { type: string, required: true, example: "React.ReactNode" }
+        required: { type: boolean, required: true }
+    rest_props:
+      type: map
+      required: false
+      description: "Spread props pattern"
+      fields:
+        targets:
+          type: array
+          required: true
+          description: "Elements receiving spread props (multiple targets supported)"
+          item_schema:
+            fields:
+              element: { type: string, required: true, description: "Target element" }
+              type: { type: string, required: true, description: "HTML element props type" }
+              filter: { type: "string[]", required: false, description: "Props to exclude from spread" }
+
+# ─────────────────────────────────────────────
+# SECTION 4: Polymorphic (as prop)
+# ─────────────────────────────────────────────
+
+polymorphic:
+  required: false
+  description: "Polymorphic component pattern (as/component prop for rendering as different elements)"
+  fields:
+    prop_name:
+      type: string
+      required: true
+      default: "as"
+      description: "Name of the polymorphic prop"
+    default_element:
+      type: string
+      required: true
+      description: "Default rendered element"
+      example: "button"
+    constraint:
+      type: string
+      required: false
+      description: "TypeScript constraint for allowed element types"
+      example: "React.ElementType"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Ref
+# ─────────────────────────────────────────────
+
+ref:
+  required: false
+  description: "Ref forwarding. Presence means component exposes a ref."
+  fields:
+    type:
+      type: string
+      required: true
+      description: "DOM element type for ref"
+      example: "HTMLButtonElement"
+    imperative_handle:
+      type: map
+      required: false
+      description: "useImperativeHandle — custom methods exposed via ref"
+      fields:
+        methods:
+          type: map
+          required: true
+          description: "Method name → return type"
+          example:
+            focus: "void"
+            scrollTo: "(position: number) => void"
+
+# ─────────────────────────────────────────────
+# SECTION 6: Hooks
+# ─────────────────────────────────────────────
+
+hooks:
+  required: false
+  fields:
+    state:
+      type: array
+      required: false
+      description: "useState hooks"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          default: { required: true }
+    effects:
+      type: array
+      required: false
+      description: "useEffect / useLayoutEffect hooks"
+      item_schema:
+        fields:
+          type: { type: enum, values: [effect, layoutEffect], default: effect }
+          deps:
+            type: union
+            types: ["string[]", "empty-array", "none"]
+            required: true
+            description: |
+              string[] — specific dependencies
+              empty-array — mount-only (runs once)
+              none — every render (no dependency array)
+          purpose: { type: string, required: true }
+          cleanup: { type: string, required: false, description: "Cleanup function description" }
+    memo:
+      type: array
+      required: false
+      description: "useMemo / useCallback hooks"
+      item_schema:
+        fields:
+          type: { type: enum, values: [memo, callback], required: true }
+          name: { type: string, required: true }
+          deps: { type: "string[]", required: true }
+    refs:
+      type: array
+      required: false
+      description: "useRef hooks (internal DOM/value refs)"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          initial: { required: true }
+    custom:
+      type: array
+      required: false
+      description: "Custom hooks used by this component"
+      item_schema:
+        fields:
+          name: { type: string, required: true, description: "Hook name (must start with 'use')" }
+          source: { type: string, required: false, description: "Import path" }
+          purpose: { type: string, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 7: Form Control
+# ─────────────────────────────────────────────
+
+form_control:
+  required: false
+  description: "Controlled/uncontrolled form component pattern (maps Layer 0 control section)"
+  fields:
+    mode:
+      type: enum
+      required: true
+      values: [controlled, uncontrolled, both]
+      description: |
+        controlled — value + onChange (parent owns state)
+        uncontrolled — defaultValue + optional onChange (component owns state)
+        both — supports either pattern
+    value_prop:
+      type: map
+      required: true
+      fields:
+        name: { type: string, required: true, example: "value" }
+        type: { type: string, required: true }
+    default_value_prop:
+      type: map
+      required: "when mode=both or mode=uncontrolled"
+      fields:
+        name: { type: string, required: true, example: "defaultValue" }
+        type: { type: string, required: true }
+    change_handler:
+      type: map
+      required: true
+      fields:
+        name: { type: string, required: true, example: "onChange" }
+        type: { type: string, required: true, example: "(value: string) => void" }
+    helper_hook:
+      type: string
+      required: false
+      description: "Custom hook for controlled/uncontrolled state management"
+      example: "useControlledState"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Context
+# ─────────────────────────────────────────────
+
+context:
+  required: false
+  fields:
+    provides:
+      type: array
+      required: false
+      description: "Context this component provides to children"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          source: { type: string, required: true, description: "Value source (prop, state, computed)" }
+    consumes:
+      type: array
+      required: false
+      description: "Context this component reads"
+      item_schema:
+        fields:
+          name: { type: string, required: true }
+          type: { type: string, required: true }
+          fallback: { required: false, description: "Default value if provider missing" }
+
+# ─────────────────────────────────────────────
+# SECTION 9: Portal
+# ─────────────────────────────────────────────
+
+portal:
+  required: false
+  description: "createPortal rendering for overlay components (Modal, Tooltip, Toast, Select dropdown)"
+  fields:
+    target:
+      type: string
+      required: true
+      description: "Portal container"
+      example: "document.body"
+    container_prop:
+      type: string
+      required: false
+      description: "Prop to override portal container"
+      example: "container"
+
+# ─────────────────────────────────────────────
+# SECTION 10: Render Pattern
+# ─────────────────────────────────────────────
+
+render:
+  required: false
+  fields:
+    conditional:
+      type: array
+      required: false
+      description: "Conditional rendering patterns"
+      item_schema:
+        fields:
+          condition: { required: true, type: structured }
+          renders: { type: string, required: true, description: "What to render" }
+    compound_children:
+      type: map
+      required: false
+      description: "Compound component pattern (Component.SubComponent)"
+      fields:
+        static_properties:
+          type: "string[]"
+          description: "Static sub-component assignments (e.g., Tabs.Tab = Tab)"
+    suspense:
+      type: map
+      required: false
+      description: "React.Suspense integration"
+      fields:
+        fallback: { type: string, required: true, description: "Suspense fallback component" }
+        boundary: { type: boolean, required: false, description: "This component is a Suspense boundary" }
+    error_boundary:
+      type: map
+      required: false
+      description: "Error boundary integration"
+      fields:
+        fallback: { type: string, required: true }
+        on_error: { type: string, required: false, description: "Error handler callback" }
+
+# ─────────────────────────────────────────────
+# SECTION 11: Event Handlers
+# ─────────────────────────────────────────────
+
+event_handlers:
+  required: true
+  description: "Maps Layer 0 behaviors to React event handler props"
+  fields:
+    _behavior_name:
+      type: map
+      fields:
+        handler_prop:
+          type: string
+          required: true
+          description: "React event handler prop name"
+          example: "onClick"
+        event_type:
+          type: string
+          required: true
+          description: "React synthetic event type"
+          example: "React.MouseEvent<HTMLButtonElement>"
+
+# ─────────────────────────────────────────────
+# SECTION 12: Performance
+# ─────────────────────────────────────────────
+
+performance:
+  required: false
+  fields:
+    memo:
+      type: boolean
+      required: false
+      description: "Wrap in React.memo"
+    memo_compare:
+      type: string
+      required: false
+      description: "Custom comparison function for React.memo"
+
+# ─────────────────────────────────────────────
+# SECTION 13: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    library:
+      type: enum
+      values: [testing-library]
+      default: testing-library
+    queries:
+      type: "string[]"
+      required: false
+      description: "Primary Testing Library queries"
+      example: ["getByRole('button')", "getByText()"]
+    user_events:
+      type: "string[]"
+      required: false
+      description: "Key user-event interactions to test"
+
+# ─────────────────────────────────────────────
+# SECTION 14: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - react_component.name must be PascalCase
+    - All event_handlers must reference behaviors defined in Layer 0
+    - Props interface name must end with 'Props'
+    - Custom hooks must start with 'use'
+    - Components with ref section must forward refs
+    - Context providers must declare what they provide
+    - server_component=true components must not use hooks or event handlers
+    - Form components (Layer 0 control section) must define form_control section
+    - Compound components must define render.compound_children
+  warnings:
+    - Prefer named exports over default exports
+    - Components with children should type them as React.ReactNode
+    - Avoid inline object/function props (causes unnecessary re-renders)
+    - Consider React.memo for pure presentational components
+    - Overlay components should use portal section
+    - server_component=false should declare "use client" in implementation

@@ -1,0 +1,168 @@
+# schemas/type.schema.yaml
+# Defines the structure for type definition spec.yaml files.
+# Applies to: shared/types/spec.yaml (and any future type modules)
+
+schema:
+  version: 2.0.0
+  description: Structure and constraints for type module spec.yaml files
+  applies_to: shared/types/spec.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Module Header
+# ─────────────────────────────────────────────
+
+module_definition:
+  required: true
+  fields:
+    name:
+      type: string
+      required: true
+      format: kebab-case
+      description: "Module identifier, matches directory name"
+    purpose:
+      type: string
+      required: true
+      language: english
+      description: "One-line description of what this module provides"
+    phase:
+      type: enum
+      required: true
+      values: [permanent, phase-2-candidate, experimental]
+    consumers:
+      type: enum
+      required: true
+      values: [all-domains, specific]
+    consumer_list:
+      type: "string[]"
+      required: "when consumers=specific"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Required Sections
+# ─────────────────────────────────────────────
+
+required_sections: [module, types]
+optional_sections: [type_exports, rules]
+
+# ─────────────────────────────────────────────
+# SECTION 3: Type Definition
+# ─────────────────────────────────────────────
+
+type_definition:
+  description: "Type specification — structural types, union types, and utility types"
+
+  variants:
+    interface:
+      description: "Object type with named fields"
+      fields:
+        description: { type: string, required: true, language: english }
+        generic_params:
+          type: map
+          required: false
+          description: "Generic type parameters. Key=param name, Value=constraint description"
+        fields:
+          type: map
+          required: true
+          description: "Object fields"
+          value_schema:
+            fields:
+              type: { type: string, required: true }
+              required: { type: boolean, required: true }
+              description: { type: string, required: true, language: english }
+        usage:
+          type: string
+          required: false
+          description: "How and where this type is used"
+        example:
+          required: false
+          description: "Concrete usage example"
+
+    union:
+      description: "Discriminated union of literal values"
+      fields:
+        type: { type: string, required: true, const: union }
+        values:
+          type: "string[]"
+          required: true
+          min_items: 2
+          description: "Exhaustive list of allowed values"
+        source:
+          type: string
+          required: false
+          description: "Reference to the spec that defines these values (e.g., 'shared/tokens/spec.yaml#spacing')"
+
+    utility:
+      description: "Generic utility type (Extract*, Prettify, etc.)"
+      fields:
+        description: { type: string, required: true, language: english }
+        definition:
+          type: string
+          required: true
+          description: "Full type definition in the declared language"
+        use_case:
+          type: string
+          required: true
+          language: english
+
+  validation:
+    - All type names must be PascalCase
+    - Union types must have 2+ values
+    - Union values must be string literals (no computed types)
+    - Source references must point to valid spec paths
+    - Interface fields must have type and description
+
+# ─────────────────────────────────────────────
+# SECTION 4: Type Exports
+# ─────────────────────────────────────────────
+
+type_exports_definition:
+  type: map
+  required: false
+  description: "Grouped type exports by category"
+  value_schema:
+    type: "string[]"
+    description: "List of type names in this category"
+  constraints:
+    - All names must be PascalCase
+    - All listed types must be defined in the types section
+
+# ─────────────────────────────────────────────
+# SECTION 5: Rules
+# ─────────────────────────────────────────────
+
+rules_definition:
+  type: "string[]"
+  required: false
+  description: "Module-specific constraints and invariants"
+  constraints:
+    - Each rule must be a concrete, verifiable statement
+    - No ambiguous words (usually, sometimes, might)
+    - Language: english
+
+# ─────────────────────────────────────────────
+# SECTION 6: Language & Style Rules
+# ─────────────────────────────────────────────
+
+language_rules:
+  all_text: english
+  description_style: noun-phrase
+  no_ambiguous_words: ["usually", "sometimes", "might", "can be", "etc."]
+  null_convention: "Use YAML null (~) for absent values. Never 'undefined' string."
+
+# ─────────────────────────────────────────────
+# SECTION 7: Validation Checklist
+# ─────────────────────────────────────────────
+
+validation_checklist:
+  errors:
+    - Module header present with all required fields
+    - Type definitions use PascalCase names
+    - Union types have 2+ values
+    - Union values are string literals (no computed types)
+    - Interface fields have type and description
+    - All text in English
+    - No YAML string "undefined"
+
+  warnings:
+    - Source references should point to valid spec paths
+    - Cross-module references should use valid paths
+    - type_exports should list all defined types

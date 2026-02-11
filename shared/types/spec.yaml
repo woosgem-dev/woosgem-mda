@@ -1,0 +1,304 @@
+# shared/types/spec.yaml
+# Common type definitions used across all domains.
+# Framework-agnostic. TypeScript-first but portable concepts.
+$schema: schemas/base/type.schema.yaml
+
+module:
+  name: types
+  purpose: Cross-domain type definitions — component contracts, token keys, utility types
+  phase: phase-2-candidate
+  consumers: all-domains
+
+# ─────────────────────────────────────────────
+# COMPONENT DEFINITION
+# ─────────────────────────────────────────────
+
+types:
+  ComponentDefinition:
+    description: "Core interface that drives all component implementations across frameworks"
+    generic_params:
+      StyleProps: "Component-specific style properties (variant, size, color, etc.)"
+      Attrs: "Output HTML attributes object — must include { class: string }"
+      Tag: "HTML element tag — constrained to keyof HTMLElementTagNameMap"
+
+    fields:
+      displayName:
+        type: string
+        required: true
+        description: "PascalCase component name for DevTools and error messages"
+
+      defaultProps:
+        type: "Required<StyleProps>"
+        required: true
+        description: "Default values for every style prop — ensures no undefined at runtime"
+
+      propTypes:
+        type: "{ [K in keyof StyleProps]?: readonly StyleProps[K][] }"
+        required: true
+        description: |
+          Exhaustive list of allowed values per enum-type prop.
+          Used for validation and documentation generation.
+          Non-enum props (boolean, string, number) omit the entry.
+
+      mapPropsToAttrs:
+        type: "(props: StyleProps) => Attrs"
+        required: true
+        description: |
+          Pure function that transforms style props to HTML attributes.
+          This is THE contract between spec and implementation.
+          Outputs data-* attributes and class names for CSS targeting.
+
+      template:
+        type: object
+        required: true
+        fields:
+          tag:
+            type: "Tag"
+            required: true
+            description: "HTML element to render"
+          slots:
+            type: "readonly string[]"
+            required: true
+            description: "Named content areas. ['default'] for single-slot components."
+
+    usage: |
+      Every component defines a *Def constant of this type.
+      Framework implementations (createComponent) consume this definition
+      to produce the final component with correct typing and behavior.
+
+    example:
+      name: ButtonDef
+      definition: |
+        const ButtonDef: ComponentDefinition<ButtonStyleProps, ButtonAttrs, 'button'> = {
+          displayName: 'Button',
+          defaultProps: { variant: 'filled', color: 'primary', size: 'md', loading: false, disabled: false, fullWidth: false },
+          propTypes: { variant: ['filled', 'outline', 'ghost', 'link'], color: [...], size: [...] },
+          mapPropsToAttrs: (props) => ({
+            class: 'btn',
+            'data-variant': props.variant,
+            'data-color': props.color,
+            'data-size': props.size,
+            ...
+          }),
+          template: { tag: 'button', slots: ['default'] }
+        }
+
+  # ─────────────────────────────────────────────
+  # UTILITY TYPES
+  # ─────────────────────────────────────────────
+
+  ExtractStyleProps:
+    description: "Extract the StyleProps generic from a ComponentDefinition"
+    definition: "type ExtractStyleProps<T> = T extends ComponentDefinition<infer S, any, any> ? S : never"
+    use_case: "Derive style prop types from definition without manual duplication"
+
+  ExtractAttrs:
+    description: "Extract the Attrs generic from a ComponentDefinition"
+    definition: "type ExtractAttrs<T> = T extends ComponentDefinition<any, infer A, any> ? A : never"
+    use_case: "Access the output attribute type for testing or type checking"
+
+  ExtractTag:
+    description: "Extract the Tag generic from a ComponentDefinition"
+    definition: "type ExtractTag<T> = T extends ComponentDefinition<any, any, infer U> ? U : never"
+    use_case: "Determine the HTML element type for ref typing"
+
+  Prettify:
+    description: "Flatten intersection types for better IDE display"
+    definition: "type Prettify<T> = { [K in keyof T]: T[K] } & {}"
+    use_case: "Improve IntelliSense readability for complex intersection types"
+
+  # ─────────────────────────────────────────────
+  # TOKEN TYPE UNIONS
+  # ─────────────────────────────────────────────
+
+  # Spacing
+  SpacingKey:
+    type: union
+    values: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "14", "16", "20", "24"]
+    source: "shared/tokens/spec.yaml#spacing"
+
+  RadiusKey:
+    type: union
+    values: [none, xs, sm, md, lg, xl, 2xl, full]
+    source: "shared/tokens/spec.yaml#radius"
+
+  SizeKey:
+    type: union
+    values: [xs, sm, md, lg, xl, 2xl]
+    source: "shared/tokens/spec.yaml#component_sizes"
+
+  IconSizeKey:
+    type: union
+    values: [sm, md, lg]
+    source: "shared/tokens/spec.yaml#icon_sizes"
+
+  ContainerHeightKey:
+    type: union
+    values: ["01", "02", "03", "04", "05"]
+    source: "shared/tokens/spec.yaml#container_heights"
+
+  ElevationKey:
+    type: union
+    values: [dropdown, sticky, fixed, modal-backdrop, modal, popover, tooltip]
+    source: "shared/tokens/spec.yaml#elevation"
+
+  BreakpointKey:
+    type: union
+    values: [sm, md, lg, xlg, max]
+    source: "shared/tokens/spec.yaml#breakpoints"
+
+  # Typography
+  FontFamilyKey:
+    type: union
+    values: [sans, mono, serif]
+    source: "shared/tokens/spec.yaml#typography.font_families"
+
+  TypeScaleKey:
+    type: union
+    values: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+    source: "shared/tokens/spec.yaml#typography.type_scale"
+
+  FontWeightKey:
+    type: union
+    values: [light, normal, medium, semibold, bold]
+    source: "shared/tokens/spec.yaml#typography.font_weights"
+
+  LineHeightKey:
+    type: union
+    values: [tight, snug, normal, relaxed, loose]
+    source: "shared/tokens/spec.yaml#typography.line_heights"
+
+  LetterSpacingKey:
+    type: union
+    values: [tight, normal, wide, wider]
+    source: "shared/tokens/spec.yaml#typography.letter_spacings"
+
+  TypeTokenKey:
+    type: union
+    values:
+      - caption-01
+      - caption-02
+      - label-01
+      - label-02
+      - helper-01
+      - helper-02
+      - body-compact-01
+      - body-compact-02
+      - body-01
+      - body-02
+      - code-01
+      - code-02
+      - heading-compact-01
+      - heading-compact-02
+      - heading-03
+      - heading-04
+      - heading-05
+      - heading-06
+      - heading-07
+    source: "shared/tokens/spec.yaml#typography.semantic_tokens"
+
+  # Motion
+  DurationKey:
+    type: union
+    values: [fast-01, fast-02, moderate-01, moderate-02, slow-01, slow-02]
+    source: "shared/tokens/spec.yaml#motion.durations"
+
+  EasingKey:
+    type: union
+    values: [productive-standard, productive-entrance, productive-exit, expressive-standard, expressive-entrance, expressive-exit]
+    source: "shared/tokens/spec.yaml#motion.easings"
+
+  MotionKey:
+    type: union
+    values: [quick, standard, deliberate, slow, enter, exit]
+    source: "shared/tokens/spec.yaml#motion.presets"
+
+  # Color (from CSP)
+  SemanticColor:
+    type: union
+    values: [primary, secondary, danger, success, warning, info]
+    source: "shared/csp/spec.yaml"
+
+  TextColor:
+    type: union
+    values: [default, muted, subtle, inverse]
+    source: "shared/csp/spec.yaml#output.categories.text"
+
+  BackgroundColor:
+    type: union
+    values: [default, subtle, muted, elevated]
+    source: "shared/csp/spec.yaml#output.categories.background"
+
+  BorderColor:
+    type: union
+    values: [default, hover]
+    source: "shared/csp/spec.yaml#output.categories.border"
+
+  HexColor:
+    type: string
+    format: "hex-color"
+    pattern: "^#[0-9a-fA-F]{6}$"
+    description: "6-digit hex color string, normalized to lowercase"
+
+  ColorMode:
+    type: union
+    values: [light, dark]
+
+  # ─────────────────────────────────────────────
+  # COMPONENT VARIABLE TYPES
+  # ─────────────────────────────────────────────
+
+  ComponentVars:
+    description: "Per-component variable map for inline style overrides (multi-platform)"
+    type: "Record<string, string>"
+    patterns:
+      css: "{ [property]: '--wg-{component}-{property}' }"
+      compose: "{ [property]: 'Local{Component}{Property}' }"
+      swiftui: "{ [property]: 'wg{Component}{Property}' }"
+    source: "shared/csp/spec.yaml#component_variables"
+
+# ─────────────────────────────────────────────
+# EXPORTS
+# ─────────────────────────────────────────────
+
+type_exports:
+  core:
+    - ComponentDefinition
+    - ExtractStyleProps
+    - ExtractAttrs
+    - ExtractTag
+    - Prettify
+
+  tokens:
+    - SpacingKey
+    - RadiusKey
+    - SizeKey
+    - IconSizeKey
+    - ContainerHeightKey
+    - ElevationKey
+    - BreakpointKey
+    - FontFamilyKey
+    - TypeScaleKey
+    - FontWeightKey
+    - LineHeightKey
+    - LetterSpacingKey
+    - TypeTokenKey
+    - DurationKey
+    - EasingKey
+    - MotionKey
+
+  color:
+    - HexColor
+    - ColorMode
+    - SemanticColor
+    - TextColor
+    - BackgroundColor
+    - BorderColor
+    - ComponentVars
+
+rules:
+  - Types are code-level contracts — they MUST match spec definitions
+  - Token type unions are derived from token specs (single source of truth)
+  - ComponentDefinition is the bridge between spec.yaml and framework code
+  - No runtime values in this module — types only (values live in tokens/csp)
+  - All type names use PascalCase

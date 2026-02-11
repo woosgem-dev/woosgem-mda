@@ -1,0 +1,191 @@
+# schemas/lang/typescript.schema.yaml
+# TypeScript language schema — type system, signatures, generics.
+# Composed with base schemas to add TS-specific type definitions.
+
+schema:
+  version: 2.0.0
+  layer: lang
+  language: typescript
+  description: TypeScript type definitions, function signatures, generics, nullability, and access modifiers
+
+# ─────────────────────────────────────────────
+# SECTION 1: Function Signatures
+# ─────────────────────────────────────────────
+
+function_signature:
+  description: "TypeScript function signature with full generic and return type"
+  fields:
+    signature:
+      type: string
+      required: true
+      format: typescript-function-signature
+      description: "Full TS signature including generics and return type"
+      example: "<T extends Record<string, unknown>>(obj: T) => Partial<T>"
+    overloads:
+      type: "string[]"
+      required: false
+      description: "Function overload signatures (if multiple)"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Type Definitions
+# ─────────────────────────────────────────────
+
+type_definition:
+  description: "TypeScript type/interface specifications"
+
+  variants:
+    interface:
+      fields:
+        definition:
+          type: string
+          required: false
+          description: "Full TS interface definition (for complex cases)"
+        fields:
+          type: map
+          required: true
+          value_schema:
+            fields:
+              type: { type: string, required: true, description: "TS type expression" }
+              required: { type: boolean, required: true }
+              description: { type: string, required: true }
+        generic_params:
+          type: map
+          required: false
+          description: "Key=param name, Value=constraint expression"
+          example:
+            T: "extends Record<string, unknown>"
+            K: "keyof T"
+
+    union:
+      fields:
+        definition:
+          type: string
+          required: false
+          description: "Full TS type definition"
+          example: "type ButtonVariant = 'filled' | 'outline' | 'ghost' | 'link'"
+
+    utility:
+      fields:
+        definition:
+          type: string
+          required: true
+          description: "Full TS utility type definition"
+          example: "type Prettify<T> = { [K in keyof T]: T[K] } & {}"
+
+    mapped:
+      fields:
+        definition:
+          type: string
+          required: true
+          description: "TS mapped or conditional type"
+          example: "type ExtractStyleProps<T> = T extends ComponentDefinition<infer S, any, any> ? S : never"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Input Types (for functions)
+# ─────────────────────────────────────────────
+
+input_types:
+  description: "Custom type definitions used in function signatures"
+  type: map
+  value_schema:
+    fields:
+      description: { type: string, required: true }
+      union:
+        type: "string[]"
+        required: false
+        description: "Union of accepted TS types"
+      fields:
+        type: map
+        required: false
+        description: "Object shape for structured types"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Type Exports
+# ─────────────────────────────────────────────
+
+type_exports:
+  description: "Types exported from this module"
+  type: "string[] | map"
+  constraints:
+    - Names must be PascalCase
+    - All exported types must be defined in this spec or referenced from another
+
+# ─────────────────────────────────────────────
+# SECTION 5: Component Props Type (for component specs)
+# ─────────────────────────────────────────────
+
+props_type:
+  description: "TypeScript interface for component props"
+  fields:
+    name:
+      type: string
+      required: true
+      format: PascalCase
+      description: "Type name (e.g., ButtonProps)"
+    definition:
+      type: string
+      required: false
+      description: "Full TS interface definition"
+    extends:
+      type: "string[]"
+      required: false
+      description: "Interfaces this type extends"
+      example: [HTMLButtonElement, AriaAttributes]
+
+# ─────────────────────────────────────────────
+# SECTION 6: Nullability
+# ─────────────────────────────────────────────
+
+nullability:
+  description: "TypeScript strict null checking"
+  fields:
+    strict_null_checks:
+      type: boolean
+      default: true
+      description: "tsconfig strictNullChecks assumed true"
+    optional_chaining:
+      type: string
+      const: "?."
+    nullish_coalescing:
+      type: string
+      const: "??"
+    non_null_assertion:
+      type: string
+      const: "!"
+
+# ─────────────────────────────────────────────
+# SECTION 7: Access Modifiers
+# ─────────────────────────────────────────────
+
+access_modifiers:
+  values: [public, protected, private, readonly]
+  default: public
+  description: "TypeScript class member visibility"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Naming Conventions
+# ─────────────────────────────────────────────
+
+naming:
+  types: PascalCase
+  interfaces: PascalCase
+  functions: camelCase
+  constants: SCREAMING_SNAKE_CASE
+  generics: "Single uppercase letter or PascalCase"
+  readonly: "readonly modifier for immutable properties"
+  file_extension: ".ts"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - All signatures must be valid TypeScript syntax
+    - Generic parameter names must not shadow outer scope
+    - Type names must be PascalCase
+    - Union types must have 2+ members
+    - Conditional types must use 'infer' correctly
+  warnings:
+    - Prefer 'interface' over 'type' for object shapes (better error messages)
+    - Avoid 'any' — use 'unknown' for truly unknown types

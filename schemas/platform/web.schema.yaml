@@ -1,0 +1,235 @@
+# schemas/platform/web.schema.yaml
+# Web platform schema — HTML semantics, ARIA, CSS visual mapping, DOM events.
+# Layer 1 for web. All web frameworks (React, Vue, Lit) inherit this.
+
+schema:
+  version: 2.0.0
+  layer: platform
+  platform: web
+  description: Web platform mapping — HTML tag, ARIA accessibility, CSS hooks, DOM events
+  extends: base/component.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: HTML Element Mapping
+# ─────────────────────────────────────────────
+
+html_element:
+  required: true
+  fields:
+    tag:
+      type: string
+      required: true
+      description: "HTML element tag (button, input, div, etc.)"
+    role:
+      type: string
+      required: true
+      description: "ARIA role. 'implicit' if the tag already implies the correct role."
+    role_conditional:
+      type: map
+      required: false
+      description: "Conditional role based on property value"
+      example: { "clickable=true": button }
+
+# ─────────────────────────────────────────────
+# SECTION 2: Accessibility (ARIA + Keyboard)
+# ─────────────────────────────────────────────
+
+accessibility:
+  required: true
+  fields:
+    aria:
+      type: map
+      required: true
+      description: "ARIA attributes without 'aria-' prefix"
+      example:
+        busy: "Set to true when loading"
+        disabled: "Set via native disabled attribute"
+    aria_computed:
+      type: array
+      required: false
+      description: "Dynamic ARIA based on state"
+      item_schema:
+        fields:
+          condition: { required: true, type: structured }
+          attributes: { required: true, type: map }
+    keyboard:
+      type: map
+      required: true
+      description: "Key = keyboard key, Value = behavior name from Layer 0"
+      example:
+        Enter: activate
+        Space: activate
+        Escape: dismiss
+    focus:
+      type: map
+      required: true
+      fields:
+        focusable: { type: boolean, required: true }
+        focus_when_disabled: { type: boolean, required: false, default: false }
+        focus_ring: { type: enum, values: [default, custom, none], default: default }
+        trap: { type: boolean, required: false, description: "Focus trap for modals/dialogs" }
+
+# ─────────────────────────────────────────────
+# SECTION 3: Visual Mapping (CSS Hooks)
+# ─────────────────────────────────────────────
+
+visual_mapping:
+  required: true
+  fields:
+    class:
+      type: string
+      required: true
+      description: "Base CSS class name"
+    data_attributes:
+      type: map
+      required: true
+      description: "Data attributes for CSS selectors"
+      value_schema:
+        strategies:
+          value-mapped:
+            description: "Attribute always present, value equals the source property"
+            fields:
+              strategy: { const: value-mapped }
+              source: { type: string, required: true }
+          present-when-true:
+            description: "Attribute exists only when condition is true"
+            fields:
+              strategy: { const: present-when-true }
+              source: { type: string, required: true }
+          priority-enum:
+            description: "Multiple states compete; highest priority wins"
+            fields:
+              strategy: { const: priority-enum }
+              priority: { type: array, required: true }
+              fallback: { type: enum, values: [absent, default], default: absent }
+
+# ─────────────────────────────────────────────
+# SECTION 4: Interaction Mapping (DOM Events)
+# ─────────────────────────────────────────────
+
+interactions:
+  required: true
+  description: "Maps Layer 0 semantic triggers to web DOM events"
+  fields:
+    _behavior_name:
+      type: map
+      description: "One entry per Layer 0 behavior"
+      fields:
+        web_triggers:
+          type: map
+          required: true
+          description: "Grouped by input method"
+          fields:
+            pointer: { type: "string[]", required: false, description: "Mouse/touch events" }
+            keyboard: { type: "string[]", required: false, description: "Keyboard keys" }
+            focus: { type: "string[]", required: false, description: "Focus events" }
+        native_event_type:
+          type: string
+          required: false
+          description: "DOM event interface name(s)"
+          example: "MouseEvent | KeyboardEvent"
+
+# ─────────────────────────────────────────────
+# SECTION 5: Native HTML Attributes
+# ─────────────────────────────────────────────
+
+native_attributes:
+  required: false
+  description: "HTML attributes that map from component properties"
+  type: array
+  item_schema:
+    fields:
+      name: { type: string, required: true, description: "HTML attribute name" }
+      source: { type: string, required: false, description: "Property to map from" }
+      strategy: { type: enum, values: [value-mapped, present-when-true, static], required: true }
+      default_value: { required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 6: Form Integration (for form controls)
+# ─────────────────────────────────────────────
+
+form_integration:
+  required: false
+  description: "Web form behavior (for Input, Checkbox, Select, etc.)"
+  fields:
+    native_element: { type: boolean, required: true, description: "Uses native HTML form element" }
+    form_associated: { type: boolean, required: true, description: "Participates in form submission" }
+    validation_api: { type: boolean, required: false, description: "Uses HTML5 constraint validation" }
+
+# ─────────────────────────────────────────────
+# SECTION 7: Animation (Web Animations API / CSS)
+# ─────────────────────────────────────────────
+
+animation:
+  required: false
+  fields:
+    css_transitions:
+      type: map
+      required: false
+      description: "CSS transition definitions per state change"
+      value_schema:
+        fields:
+          properties: { type: "string[]", required: true }
+          duration: { type: string, required: true, description: "Token reference or duration value" }
+          easing: { type: string, required: false }
+    css_keyframes:
+      type: map
+      required: false
+      description: "Named @keyframes animations"
+    prefers_reduced_motion:
+      type: boolean
+      required: false
+      default: true
+      description: "Respects prefers-reduced-motion media query"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Responsive
+# ─────────────────────────────────────────────
+
+responsive:
+  required: false
+  fields:
+    breakpoints:
+      type: map
+      required: false
+      description: "Behavior changes per breakpoint"
+    container_queries:
+      type: map
+      required: false
+      description: "Container query responsive rules"
+    intrinsic_sizing:
+      type: boolean
+      required: false
+      description: "Uses min/max/clamp for fluid sizing"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    test_attributes:
+      type: map
+      required: false
+      description: "data-testid patterns for testing library queries"
+    axe_rules:
+      type: "string[]"
+      required: false
+      description: "Specific axe-core accessibility rules to validate"
+
+# ─────────────────────────────────────────────
+# SECTION 10: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - html_element.tag must be a valid HTML element
+    - All keyboard mappings must reference behaviors defined in Layer 0
+    - data_attributes strategies must be one of (value-mapped, present-when-true, priority-enum)
+    - ARIA attributes must be valid WAI-ARIA attribute names
+    - Form components must define form_integration
+  warnings:
+    - Prefer semantic HTML elements over div+role
+    - Components with hover behavior should have focus equivalent
+    - Interactive components should have keyboard navigation

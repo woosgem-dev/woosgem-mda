@@ -1,0 +1,451 @@
+# schemas/framework/lit.schema.yaml
+# Lit framework schema — Custom Elements, reactive properties, controllers, context, CSS parts.
+# Layer 2 for Lit. Builds on top of web platform (Layer 1).
+# Targets Lit 3.x.
+
+schema:
+  version: 2.0.0
+  layer: framework
+  framework: lit
+  description: Lit implementation patterns — custom element, reactive properties, controllers, context, CSS parts
+  extends: platform/web.schema.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Custom Element Definition
+# ─────────────────────────────────────────────
+
+custom_element:
+  required: true
+  fields:
+    tag_name:
+      type: string
+      required: true
+      format: kebab-case
+      description: "Custom element tag name (must contain a hyphen)"
+      example: "wg-button"
+    prefix:
+      type: string
+      required: true
+      default: "wg"
+      description: "Element name prefix"
+    class_name:
+      type: string
+      required: true
+      format: PascalCase
+      description: "LitElement class name"
+    base_class:
+      type: string
+      required: false
+      default: "LitElement"
+      description: "Base class to extend (e.g., WgBaseElement)"
+    decorator:
+      type: string
+      required: true
+      default: "@customElement"
+      description: "Class decorator — tag_name is passed as argument"
+      example: "@customElement('wg-button')"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Reactive Properties (@property / @state)
+# ─────────────────────────────────────────────
+
+properties:
+  required: true
+  fields:
+    reactive:
+      type: map
+      required: true
+      description: "@property — public reactive properties (exposed as attributes)"
+      value_schema:
+        fields:
+          type: { type: string, required: true, description: "TypeScript type" }
+          attribute:
+            type: union
+            types: [string, boolean]
+            required: false
+            description: "HTML attribute name, or false to disable attribute binding"
+          reflect:
+            type: boolean
+            required: false
+            default: false
+            description: "Reflect property value back to attribute"
+          converter:
+            type: string
+            required: false
+            description: "Custom attribute converter function or object"
+          has_changed:
+            type: string
+            required: false
+            description: "Custom change detection function"
+          default: { required: true }
+    internal:
+      type: map
+      required: false
+      description: "@state — internal reactive state (not exposed as attributes, triggers re-render)"
+      value_schema:
+        fields:
+          type: { type: string, required: true }
+          default: { required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 3: Shadow DOM / Light DOM
+# ─────────────────────────────────────────────
+
+rendering:
+  required: true
+  fields:
+    mode:
+      type: enum
+      required: true
+      values: [shadow-open, shadow-closed, light]
+      default: shadow-open
+      description: |
+        shadow-open — open Shadow DOM (default LitElement behavior)
+        shadow-closed — closed Shadow DOM
+        light — Light DOM via createRenderRoot() returning this
+    delegatesFocus:
+      type: boolean
+      required: false
+      default: false
+      description: "Shadow root delegatesFocus option (shadow mode only)"
+    slots:
+      type: map
+      required: false
+      description: "Named <slot> elements (shadow mode only)"
+      value_schema:
+        fields:
+          description: { type: string, required: true }
+          fallback: { type: string, required: false, description: "Default slot content" }
+          slotchange_handler: { type: boolean, required: false, description: "Listen for slotchange event" }
+
+# ─────────────────────────────────────────────
+# SECTION 4: Decorators
+# ─────────────────────────────────────────────
+
+decorators:
+  required: false
+  description: "Lit decorators used beyond @property/@state/@customElement"
+  fields:
+    query:
+      type: map
+      required: false
+      description: "@query — selects a single element from render root"
+      value_schema:
+        fields:
+          selector: { type: string, required: true }
+          type: { type: string, required: true, description: "Element type" }
+      example:
+        _button: { selector: "button", type: "HTMLButtonElement" }
+        _input: { selector: "input[type=text]", type: "HTMLInputElement" }
+    queryAll:
+      type: map
+      required: false
+      description: "@queryAll — selects multiple elements"
+      value_schema:
+        fields:
+          selector: { type: string, required: true }
+          type: { type: string, required: true }
+    queryAsync:
+      type: map
+      required: false
+      description: "@queryAsync — resolves after updateComplete"
+      value_schema:
+        fields:
+          selector: { type: string, required: true }
+          type: { type: string, required: true }
+    eventOptions:
+      type: map
+      required: false
+      description: "@eventOptions — event listener options for template handlers"
+      value_schema:
+        fields:
+          passive: { type: boolean, required: false }
+          capture: { type: boolean, required: false }
+          once: { type: boolean, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 5: Reactive Controllers
+# ─────────────────────────────────────────────
+
+controllers:
+  required: false
+  description: "ReactiveController instances — Lit 3.x composition primitive (equivalent to React hooks, Vue composables)"
+  fields:
+    _controller_name:
+      type: map
+      fields:
+        class:
+          type: string
+          required: true
+          description: "Controller class name"
+        source:
+          type: string
+          required: false
+          description: "Import path"
+        purpose: { type: string, required: true }
+        host_callbacks:
+          type: "string[]"
+          required: false
+          description: "Lifecycle callbacks this controller uses"
+          example: [hostConnected, hostDisconnected, hostUpdate, hostUpdated]
+
+# ─────────────────────────────────────────────
+# SECTION 6: Context (@lit/context)
+# ─────────────────────────────────────────────
+
+context:
+  required: false
+  description: "W3C Community Group Context Protocol via @lit/context"
+  fields:
+    provides:
+      type: array
+      required: false
+      description: "Context values this component provides (ContextProvider)"
+      item_schema:
+        fields:
+          key: { type: string, required: true, description: "createContext() key" }
+          type: { type: string, required: true }
+          source: { type: string, required: true, description: "Value source (property, state, computed)" }
+    consumes:
+      type: array
+      required: false
+      description: "Context values consumed (@consume decorator or ContextConsumer)"
+      item_schema:
+        fields:
+          key: { type: string, required: true }
+          type: { type: string, required: true }
+          subscribe: { type: boolean, required: false, default: false, description: "Re-render on context changes" }
+
+# ─────────────────────────────────────────────
+# SECTION 7: CSS (Lit-specific styling API)
+# ─────────────────────────────────────────────
+
+css:
+  required: true
+  fields:
+    static_styles:
+      type: boolean
+      required: true
+      default: true
+      description: "Uses static styles = css`...` (recommended for performance)"
+    style_composition:
+      type: "string[]"
+      required: false
+      description: "Shared styles imported and composed via array"
+      example: ["baseStyles", "buttonStyles"]
+    parts:
+      type: map
+      required: false
+      description: "CSS ::part() exposed for external styling (shadow mode only)"
+      value_schema:
+        fields:
+          element: { type: string, required: true, description: "Internal element exposing the part" }
+          description: { type: string, required: true }
+    custom_properties:
+      type: map
+      required: false
+      description: "CSS custom properties for theming"
+      value_schema:
+        fields:
+          default: { type: string, required: true }
+          description: { type: string, required: true }
+    adoptedStyleSheets:
+      type: "string[]"
+      required: false
+      description: "Shared constructable stylesheets adopted into render root"
+    unsafe_css:
+      type: boolean
+      required: false
+      default: false
+      description: "Uses unsafeCSS() for dynamic style values"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Events (Custom Events)
+# ─────────────────────────────────────────────
+
+events:
+  required: true
+  description: "Maps Layer 0 behaviors to dispatched CustomEvents"
+  fields:
+    _behavior_name:
+      type: map
+      fields:
+        event_name:
+          type: string
+          required: true
+          description: "CustomEvent name (kebab-case)"
+          example: "wg-click"
+        detail_type:
+          type: string
+          required: true
+          description: "TypeScript type for event.detail"
+        bubbles: { type: boolean, required: false, default: true }
+        composed: { type: boolean, required: false, default: true, description: "Cross shadow DOM boundary" }
+        cancelable: { type: boolean, required: false, default: false }
+
+# ─────────────────────────────────────────────
+# SECTION 9: Lifecycle
+# ─────────────────────────────────────────────
+
+lifecycle:
+  required: false
+  fields:
+    connectedCallback:
+      type: map
+      required: false
+      fields:
+        purpose: { type: string, required: true }
+    disconnectedCallback:
+      type: map
+      required: false
+      fields:
+        cleanup: { type: "string[]", required: true, description: "Resources to clean up" }
+    createRenderRoot:
+      type: map
+      required: false
+      description: "Override for Light DOM (return this) or custom shadow root options"
+      fields:
+        returns: { type: enum, values: [this, super, custom], required: true }
+    firstUpdated:
+      type: map
+      required: false
+      fields:
+        purpose: { type: string, required: true }
+    willUpdate:
+      type: map
+      required: false
+      fields:
+        purpose: { type: string, required: true }
+        changed_properties: { type: "string[]", required: false }
+    updated:
+      type: map
+      required: false
+      fields:
+        changed_properties: { type: "string[]", required: false, description: "Properties to check" }
+    requestUpdate:
+      type: map
+      required: false
+      description: "Manual re-render trigger usage"
+      fields:
+        purpose: { type: string, required: true }
+    updateComplete:
+      type: map
+      required: false
+      description: "Async update completion handling"
+      fields:
+        awaited_in: { type: "string[]", description: "Where updateComplete is awaited" }
+
+# ─────────────────────────────────────────────
+# SECTION 10: Template (render)
+# ─────────────────────────────────────────────
+
+render_template:
+  required: true
+  fields:
+    directives:
+      type: "string[]"
+      required: false
+      description: "Lit directives used in template"
+      example: ["classMap", "styleMap", "when", "repeat", "ifDefined", "live", "ref", "guard"]
+    conditional:
+      type: array
+      required: false
+      description: "Conditional rendering patterns"
+      item_schema:
+        fields:
+          condition: { required: true, type: structured }
+          renders: { type: string, required: true }
+
+# ─────────────────────────────────────────────
+# SECTION 11: Form Association
+# ─────────────────────────────────────────────
+
+form_associated:
+  required: false
+  description: "ElementInternals for form participation"
+  fields:
+    enabled:
+      type: boolean
+      required: true
+      description: "static formAssociated = true"
+    internals:
+      type: map
+      required: false
+      fields:
+        value: { type: string, required: true, description: "Property source for form value" }
+        validity: { type: boolean, required: false, description: "Uses setValidity()" }
+        form_state: { type: boolean, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 12: SSR / Hydration
+# ─────────────────────────────────────────────
+
+ssr:
+  required: false
+  fields:
+    declarative_shadow_dom:
+      type: boolean
+      required: false
+      default: true
+      description: "Supports Declarative Shadow DOM for SSR"
+    is_server_guard:
+      type: boolean
+      required: false
+      description: "Uses isServer check for server-only logic"
+    hydration:
+      type: enum
+      required: false
+      values: [eager, lazy, none]
+      default: eager
+
+# ─────────────────────────────────────────────
+# SECTION 13: Testing
+# ─────────────────────────────────────────────
+
+testing:
+  required: false
+  fields:
+    library:
+      type: enum
+      values: [open-wc, web-test-runner, vitest]
+      default: open-wc
+    fixture:
+      type: string
+      required: false
+      description: "Test fixture pattern"
+      example: "const el = await fixture<WgButton>(html`<wg-button>Click</wg-button>`);"
+    update_complete:
+      type: boolean
+      required: false
+      default: true
+      description: "Tests must await el.updateComplete before assertions"
+    queries:
+      type: "string[]"
+      required: false
+      description: "Query patterns for assertions"
+      example:
+        - "el.shadowRoot!.querySelector('button')"
+        - "el.querySelector('button')  # Light DOM"
+
+# ─────────────────────────────────────────────
+# SECTION 14: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - custom_element.tag_name must contain a hyphen (web component spec requirement)
+    - custom_element.class_name must be PascalCase
+    - All events must reference behaviors defined in Layer 0
+    - Reflected properties must have a matching attribute name
+    - Form-associated components must set static formAssociated = true
+    - Light DOM components must not define slots or parts
+    - Shadow DOM components must define rendering.mode as shadow-open or shadow-closed
+    - CSS parts must reference elements that exist in the render template
+  warnings:
+    - Prefer static styles over dynamic styles for performance
+    - Prefer open shadow DOM unless encapsulation requires closed
+    - Prefer Reactive Controllers over mixins for shared behavior
+    - Use @lit/context for parent-child communication in compound components
+    - Custom events should use consistent naming convention
+    - Consider Declarative Shadow DOM for SSR compatibility
+    - Await updateComplete in tests before assertions

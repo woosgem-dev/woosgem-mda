@@ -1,0 +1,438 @@
+# shared/tokens/spec.yaml
+# Design tokens — foundational visual constants shared across all components.
+# Platform-neutral: values are unitless numbers. Platform-specific output is handled by build tools.
+# Compatible with W3C DTCG Design Tokens Format (2025.10).
+$schema: schemas/base/token.schema.yaml
+
+module:
+  name: tokens
+  purpose: Design tokens — spacing, typography, breakpoints, radius, z-index, motion
+  phase: permanent
+  consumers: all-domains
+
+# ─────────────────────────────────────────────
+# CONVENTIONS
+# ─────────────────────────────────────────────
+
+conventions:
+  value_format: |
+    All token values are unitless numbers.
+    The unit is declared once per scale, not per value.
+    Build tools attach platform-specific units during output generation.
+  unit_mapping:
+    description: "How abstract units map to each platform"
+    dimension:
+      web: "multiply by 0.25 → rem (base 16px)"
+      android: "multiply by 4 → dp"
+      ios: "multiply by 4 → pt"
+    font_size:
+      web: "use type_scale reference → rem"
+      android: "use type_scale reference → sp"
+      ios: "use type_scale reference → pt"
+    duration:
+      web: "ms"
+      android: "ms (Long)"
+      ios: "TimeInterval (seconds = ms / 1000)"
+    unitless:
+      description: "Values like font-weight, line-height, opacity have no unit on any platform"
+  non_contiguous_keys: |
+    Spacing keys are intentionally non-contiguous (skip 13, 15, 17-19, 21-23).
+    This follows the Tailwind-style density curve: tighter steps at small sizes, wider gaps at large.
+  mode_invariance: |
+    All non-color tokens are mode-invariant (same in light and dark mode).
+    Color tokens are managed by CSP (shared/csp/spec.yaml), not here.
+
+# ─────────────────────────────────────────────
+# SPACING
+# ─────────────────────────────────────────────
+
+spacing:
+  $type: dimension
+  base_unit: 4
+  description: "Spacing scale. Each step = base_unit * key. E.g., key 4 = 4 * 4 = 16px / 1rem / 16dp"
+  scale:
+    0:  0
+    1:  4       # 4px / 0.25rem / 4dp
+    2:  8       # 8px / 0.5rem / 8dp
+    3:  12      # 12px / 0.75rem / 12dp
+    4:  16      # 16px / 1rem / 16dp
+    5:  20      # 20px / 1.25rem / 20dp
+    6:  24      # 24px / 1.5rem / 24dp
+    7:  28      # 28px / 1.75rem / 28dp
+    8:  32      # 32px / 2rem / 32dp
+    9:  36      # 36px / 2.25rem / 36dp
+    10: 40      # 40px / 2.5rem / 40dp
+    11: 44      # 44px / 2.75rem / 44dp
+    12: 48      # 48px / 3rem / 48dp
+    14: 56      # 56px / 3.5rem / 56dp
+    16: 64      # 64px / 4rem / 64dp
+    20: 80      # 80px / 5rem / 80dp
+    24: 96      # 96px / 6rem / 96dp
+  output_patterns:
+    css: "--wg-spacing-{key}"
+    scss: "$spacing-{key}"
+    android: "wg_spacing_{key}"
+    ios: "WgSpacing.s{key}"
+    compose: "WgTokens.spacing{key}"
+
+# ─────────────────────────────────────────────
+# BORDER RADIUS
+# ─────────────────────────────────────────────
+
+radius:
+  $type: dimension
+  description: "Border radius scale"
+  scale:
+    none: 0
+    xs:   2       # 2px / 0.125rem / 2dp
+    sm:   4       # 4px / 0.25rem / 4dp
+    md:   6       # 6px / 0.375rem / 6dp
+    lg:   8       # 8px / 0.5rem / 8dp
+    xl:   12      # 12px / 0.75rem / 12dp
+    2xl:  16      # 16px / 1rem / 16dp
+    full:
+      type: circular
+      description: "Fully rounded (pill/circle shape)"
+      web_value: 9999
+      native_strategy: "50% of shorter dimension or platform circle shape"
+  output_patterns:
+    css: "--wg-radius-{key}"
+    scss: "$radius-{key}"
+    android: "wg_radius_{key}"
+    ios: "WgRadius.{key}"
+
+# ─────────────────────────────────────────────
+# COMPONENT SIZES
+# ─────────────────────────────────────────────
+
+component_sizes:
+  $type: dimension
+  description: "Standard height/width for interactive components"
+  scale:
+    xs:  24      # 24px / 1.5rem / 24dp
+    sm:  32      # 32px / 2rem / 32dp
+    md:  40      # 40px / 2.5rem / 40dp
+    lg:  48      # 48px / 3rem / 48dp
+    xl:  56      # 56px / 3.5rem / 56dp
+    2xl: 80      # 80px / 5rem / 80dp
+  output_patterns:
+    css: "--wg-size-{key}"
+    scss: "$size-{key}"
+    android: "wg_size_{key}"
+    ios: "WgSize.{key}"
+
+# ─────────────────────────────────────────────
+# ICON SIZES
+# ─────────────────────────────────────────────
+
+icon_sizes:
+  $type: dimension
+  description: "Icon dimensions. Pixel-aligned for crisp rendering on all platforms."
+  scale:
+    sm: 16      # 16px / 1rem / 16dp
+    md: 20      # 20px / 1.25rem / 20dp
+    lg: 24      # 24px / 1.5rem / 24dp
+  output_patterns:
+    css: "--wg-icon-size-{key}"
+    scss: "$icon-size-{key}"
+    android: "wg_icon_size_{key}"
+    ios: "WgIconSize.{key}"
+
+# ─────────────────────────────────────────────
+# CONTAINER HEIGHTS
+# ─────────────────────────────────────────────
+
+container_heights:
+  $type: dimension
+  description: "Standard container heights"
+  scale:
+    01: 24      # 24px / 1.5rem / 24dp
+    02: 32      # 32px / 2rem / 32dp
+    03: 40      # 40px / 2.5rem / 40dp
+    04: 48      # 48px / 3rem / 48dp
+    05: 64      # 64px / 4rem / 64dp
+  output_patterns:
+    css: "--wg-container-height-{key}"
+    scss: "$container-height-{key}"
+    android: "wg_container_height_{key}"
+    ios: "WgContainerHeight.h{key}"
+
+# ─────────────────────────────────────────────
+# Z-INDEX / ELEVATION
+# ─────────────────────────────────────────────
+
+elevation:
+  description: |
+    Layering hierarchy for overlapping elements.
+    Web uses z-index (unitless integer). Android uses elevation (dp). iOS uses zPosition (CGFloat).
+  scale:
+    dropdown:       { z_index: 1000, elevation_dp: 4,  description: "Dropdown menus" }
+    sticky:         { z_index: 1020, elevation_dp: 6,  description: "Sticky headers" }
+    fixed:          { z_index: 1030, elevation_dp: 8,  description: "Fixed position elements" }
+    modal-backdrop: { z_index: 1040, elevation_dp: 16, description: "Modal backdrop overlay" }
+    modal:          { z_index: 1050, elevation_dp: 24, description: "Modal dialog" }
+    popover:        { z_index: 1060, elevation_dp: 8,  description: "Popover/dropdown" }
+    tooltip:        { z_index: 1070, elevation_dp: 4,  description: "Tooltip overlay" }
+  output_patterns:
+    css: "--wg-z-{key}"
+    android: "wg_elevation_{key}"
+    ios: "WgElevation.{key}"
+
+# ─────────────────────────────────────────────
+# BREAKPOINTS
+# ─────────────────────────────────────────────
+
+breakpoints:
+  $type: dimension
+  description: "Responsive breakpoints. Web uses min-width media queries. Native uses window size classes."
+  scale:
+    sm:  320     # Small phone
+    md:  672     # Tablet portrait / large phone
+    lg:  1056    # Tablet landscape / small desktop
+    xlg: 1312    # Desktop
+    max: 1584    # Large desktop
+  platform_mapping:
+    web: "min-width media query in px"
+    android:
+      description: "Maps to WindowSizeClass"
+      mapping:
+        compact: "< md (672)"
+        medium: ">= md (672) and < lg (1056)"
+        expanded: ">= lg (1056)"
+    ios:
+      description: "Maps to horizontal size class"
+      mapping:
+        compact: "< md (672)"
+        regular: ">= md (672)"
+  output_patterns:
+    css: "--wg-breakpoint-{key}"
+    scss: "$breakpoint-{key}"
+
+# ─────────────────────────────────────────────
+# TYPOGRAPHY
+# ─────────────────────────────────────────────
+
+typography:
+  font_families:
+    description: "Font family definitions per platform"
+    families:
+      sans:
+        web: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+        android: "Inter"
+        ios: "Inter"
+        fallback_system:
+          android: "sans-serif"
+          ios: "-apple-system"
+      mono:
+        web: "'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace"
+        android: "JetBrains Mono"
+        ios: "JetBrains Mono"
+        fallback_system:
+          android: "monospace"
+          ios: "Menlo"
+      serif:
+        web: "Georgia, 'Times New Roman', Times, serif"
+        android: "serif"
+        ios: "Georgia"
+    output_patterns:
+      css: "--wg-font-{key}"
+      scss: "$font-{key}"
+      android: "wg_font_{key}"
+      ios: "WgFont.{key}"
+
+  type_scale:
+    $type: dimension
+    description: "Font size scale, 12 steps from 12px to 54px"
+    scale:
+      01: 12      # 12px / 0.75rem / 12sp
+      02: 14      # 14px / 0.875rem / 14sp
+      03: 16      # 16px / 1rem / 16sp — body default
+      04: 18      # 18px / 1.125rem / 18sp
+      05: 20      # 20px / 1.25rem / 20sp
+      06: 24      # 24px / 1.5rem / 24sp
+      07: 28      # 28px / 1.75rem / 28sp
+      08: 32      # 32px / 2rem / 32sp
+      09: 36      # 36px / 2.25rem / 36sp
+      10: 42      # 42px / 2.625rem / 42sp
+      11: 48      # 48px / 3rem / 48sp
+      12: 54      # 54px / 3.375rem / 54sp
+    output_patterns:
+      css: "--wg-font-size-{key}"
+      scss: "$font-size-{key}"
+      android: "wg_font_size_{key}"
+      ios: "WgFontSize.s{key}"
+
+  font_weights:
+    $type: number
+    description: "Font weight values (unitless, same on all platforms)"
+    scale:
+      light:    300
+      normal:   400
+      medium:   500
+      semibold: 600
+      bold:     700
+    output_patterns:
+      css: "--wg-font-weight-{key}"
+      scss: "$font-weight-{key}"
+      android: "wg_font_weight_{key}"
+      ios: "WgFontWeight.{key}"
+
+  line_heights:
+    $type: number
+    description: "Line height multipliers (unitless ratio, same on all platforms)"
+    scale:
+      tight:   1.25
+      snug:    1.375
+      normal:  1.5
+      relaxed: 1.625
+      loose:   1.75
+    output_patterns:
+      css: "--wg-line-height-{key}"
+      scss: "$line-height-{key}"
+      android: "wg_line_height_{key}"
+      ios: "WgLineHeight.{key}"
+
+  letter_spacings:
+    $type: number
+    description: "Letter spacing as em multiplier (unitless ratio relative to font size)"
+    scale:
+      tight:  -0.02
+      normal: 0
+      wide:   0.02
+      wider:  0.04
+    output_patterns:
+      css: "--wg-letter-spacing-{key}"
+      scss: "$letter-spacing-{key}"
+      android: "wg_letter_spacing_{key}"
+      ios: "WgLetterSpacing.{key}"
+    platform_notes:
+      web: "Multiply by 1em for CSS (e.g., -0.02em)"
+      android: "Use as Compose TextStyle letterSpacing in em"
+      ios: "Multiply by font size for kern value in points"
+
+  semantic_tokens:
+    description: "Pre-composed type styles combining references to base scales"
+    output_properties: [size, weight, line_height, family]
+    tokens:
+      caption-01:    { size: 01, weight: normal,   line_height: snug,   family: sans }
+      caption-02:    { size: 02, weight: normal,   line_height: snug,   family: sans }
+      label-01:      { size: 01, weight: medium,   line_height: snug,   family: sans }
+      label-02:      { size: 02, weight: medium,   line_height: snug,   family: sans }
+      helper-01:     { size: 01, weight: normal,   line_height: normal, family: sans }
+      helper-02:     { size: 02, weight: normal,   line_height: normal, family: sans }
+      body-compact-01: { size: 02, weight: normal, line_height: snug,   family: sans }
+      body-compact-02: { size: 03, weight: normal, line_height: snug,   family: sans }
+      body-01:       { size: 02, weight: normal,   line_height: normal, family: sans }
+      body-02:       { size: 03, weight: normal,   line_height: normal, family: sans }
+      code-01:       { size: 01, weight: normal,   line_height: normal, family: mono }
+      code-02:       { size: 02, weight: normal,   line_height: normal, family: mono }
+      heading-compact-01: { size: 02, weight: semibold, line_height: tight, family: sans }
+      heading-compact-02: { size: 03, weight: semibold, line_height: tight, family: sans }
+      heading-03:    { size: 05, weight: semibold, line_height: tight,  family: sans }
+      heading-04:    { size: 07, weight: semibold, line_height: tight,  family: sans }
+      heading-05:    { size: 08, weight: semibold, line_height: tight,  family: sans }
+      heading-06:    { size: 10, weight: semibold, line_height: tight,  family: sans }
+      heading-07:    { size: 11, weight: light,    line_height: tight,  family: sans }
+    output_patterns:
+      css: "--wg-type-{token}-{property}"
+      scss: "$type-{token}-{property}"
+
+# ─────────────────────────────────────────────
+# MOTION
+# ─────────────────────────────────────────────
+
+motion:
+  durations:
+    $type: duration
+    description: "Animation/transition durations in milliseconds (numeric, all platforms)"
+    scale:
+      fast-01:     70
+      fast-02:     110
+      moderate-01: 150
+      moderate-02: 240
+      slow-01:     400
+      slow-02:     700
+    output_patterns:
+      css: "--wg-duration-{key}"
+      scss: "$duration-{key}"
+      android: "wg_duration_{key}"
+      ios: "WgDuration.{key}"
+    platform_notes:
+      web: "Append 'ms' for CSS"
+      android: "Use as Long milliseconds"
+      ios: "Divide by 1000 for TimeInterval seconds"
+
+  easings:
+    $type: cubicBezier
+    description: "Easing curves as 4 control points [x1, y1, x2, y2]"
+    scale:
+      productive-standard:  [0.2, 0, 0.38, 0.9]
+      productive-entrance:  [0, 0, 0.38, 0.9]
+      productive-exit:      [0.2, 0, 1, 0.9]
+      expressive-standard:  [0.4, 0.14, 0.3, 1]
+      expressive-entrance:  [0, 0, 0.3, 1]
+      expressive-exit:      [0.4, 0.14, 1, 1]
+    output_patterns:
+      css: "--wg-easing-{key}"
+      scss: "$easing-{key}"
+      android: "wg_easing_{key}"
+      ios: "WgEasing.{key}"
+    platform_notes:
+      web: "Format as cubic-bezier(x1, y1, x2, y2)"
+      android: "CubicBezierEasing(x1, y1, x2, y2)"
+      ios: "CAMediaTimingFunction(controlPoints: x1, y1, x2, y2)"
+
+  presets:
+    description: "Named motion presets combining duration + easing references"
+    tokens:
+      quick:      { duration: fast-02,     easing: productive-standard }
+      standard:   { duration: moderate-01, easing: productive-standard }
+      deliberate: { duration: moderate-02, easing: productive-standard }
+      slow:       { duration: slow-01,     easing: productive-standard }
+      enter:      { duration: moderate-02, easing: productive-entrance }
+      exit:       { duration: moderate-01, easing: productive-exit }
+    output_patterns:
+      css: "--wg-motion-{key}-duration, --wg-motion-{key}-easing"
+      description: "Motion presets emit two CSS variables each (duration + easing)"
+
+# ─────────────────────────────────────────────
+# OUTPUT CONTRACT
+# ─────────────────────────────────────────────
+
+output:
+  platforms:
+    web:
+      formats: [css, scss, typescript]
+      unit_system: "rem (1rem = 16px base)"
+    android:
+      formats: [xml, kotlin-compose]
+      unit_system: "dp/sp (1dp = 1px at 160dpi)"
+    ios:
+      formats: [swift, swiftui]
+      unit_system: "pt (1pt = 1px at 1x scale)"
+
+  type_exports:
+    - SpacingKey
+    - RadiusKey
+    - SizeKey
+    - IconSizeKey
+    - ContainerHeightKey
+    - ElevationKey
+    - BreakpointKey
+    - FontFamilyKey
+    - TypeScaleKey
+    - FontWeightKey
+    - LineHeightKey
+    - LetterSpacingKey
+    - TypeTokenKey
+    - DurationKey
+    - EasingKey
+    - MotionKey
+
+rules:
+  - All token values are immutable constants
+  - Token values are unitless numbers (platform attaches units)
+  - Non-color tokens are mode-invariant (light/dark same)
+  - Token changes affect all domains — require .decisions/ record
+  - No framework-specific or platform-specific logic in token definitions
+  - Spacing keys are intentionally non-contiguous (density curve)

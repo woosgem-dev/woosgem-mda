@@ -1,0 +1,215 @@
+# schemas/lang/swift.schema.yaml
+# Swift language schema — type system, protocols, structs, optionals, generics.
+# Composed with base schemas to add Swift-specific type definitions.
+
+schema:
+  version: 2.0.0
+  layer: lang
+  language: swift
+  description: Swift type definitions, function signatures, optionals, generics, and concurrency
+
+# ─────────────────────────────────────────────
+# SECTION 1: Function Signatures
+# ─────────────────────────────────────────────
+
+function_signature:
+  fields:
+    signature:
+      type: string
+      required: true
+      format: swift-function-signature
+      description: "Full Swift function signature"
+      example: "func filterNullish<T>(_ dict: [String: T?]) -> [String: T]"
+    throws:
+      type: boolean
+      required: false
+      default: false
+    async:
+      type: boolean
+      required: false
+      default: false
+    access:
+      type: enum
+      required: false
+      values: [public, internal, private, fileprivate, open]
+      default: public
+
+# ─────────────────────────────────────────────
+# SECTION 2: Type Definitions
+# ─────────────────────────────────────────────
+
+type_definition:
+  variants:
+    struct:
+      fields:
+        definition:
+          type: string
+          required: true
+          description: "Full Swift struct definition"
+          example: |
+            public struct ButtonStyle {
+                let variant: ButtonVariant
+                let color: ButtonColor
+                let size: ButtonSize
+            }
+        conformance:
+          type: "string[]"
+          required: false
+          description: "Protocol conformances"
+          example: [Equatable, Hashable, Codable]
+        fields:
+          type: map
+          required: true
+          value_schema:
+            fields:
+              type: { type: string, required: true }
+              default: { required: false }
+              let_var: { type: enum, values: [let, var], default: let }
+              description: { type: string, required: true }
+
+    enum:
+      fields:
+        definition:
+          type: string
+          required: true
+        cases:
+          type: "string[]"
+          required: true
+        raw_type:
+          type: string
+          required: false
+          description: "Raw value type (String, Int, etc.)"
+        associated_values:
+          type: map
+          required: false
+
+    protocol:
+      fields:
+        definition:
+          type: string
+          required: true
+        requirements:
+          type: "string[]"
+          required: true
+          description: "Required properties and methods"
+
+    typealias:
+      fields:
+        definition:
+          type: string
+          required: true
+          example: "public typealias HexColor = String"
+
+# ─────────────────────────────────────────────
+# SECTION 3: Optionals
+# ─────────────────────────────────────────────
+
+optionals:
+  description: "Swift optional type system"
+  fields:
+    optional_syntax:
+      type: string
+      const: "T?"
+    implicitly_unwrapped:
+      type: string
+      const: "T!"
+    optional_binding:
+      description: "if let / guard let patterns"
+    nil_coalescing:
+      type: string
+      const: "??"
+
+# ─────────────────────────────────────────────
+# SECTION 4: Generics
+# ─────────────────────────────────────────────
+
+generics:
+  description: "Swift generics with protocol constraints"
+  fields:
+    constraint:
+      type: string
+      required: false
+      description: "Protocol constraint (e.g., 'T: Equatable')"
+    where_clause:
+      type: string
+      required: false
+      description: "Complex constraints via where clause"
+    associated_type:
+      type: map
+      required: false
+      description: "Protocol associated types"
+      fields:
+        name: { type: string, required: true }
+        constraint: { type: string, required: false }
+
+# ─────────────────────────────────────────────
+# SECTION 5: Access Control
+# ─────────────────────────────────────────────
+
+access_control:
+  values: [open, public, internal, fileprivate, private]
+  default: internal
+  description: "Swift access control levels"
+
+# ─────────────────────────────────────────────
+# SECTION 6: Result Builders
+# ─────────────────────────────────────────────
+
+result_builders:
+  description: "Swift result builder pattern (@resultBuilder)"
+  fields:
+    name:
+      type: string
+      required: true
+      description: "Result builder attribute name"
+    build_methods:
+      type: "string[]"
+      required: false
+      description: "Required build methods (buildBlock, buildOptional, etc.)"
+
+# ─────────────────────────────────────────────
+# SECTION 7: Concurrency
+# ─────────────────────────────────────────────
+
+concurrency:
+  description: "Swift structured concurrency"
+  fields:
+    async:
+      type: boolean
+      required: false
+    throws:
+      type: boolean
+      required: false
+    actor:
+      type: boolean
+      required: false
+      description: "Whether type is an actor"
+    sendable:
+      type: boolean
+      required: false
+      description: "Conforms to Sendable protocol"
+
+# ─────────────────────────────────────────────
+# SECTION 8: Naming Conventions
+# ─────────────────────────────────────────────
+
+naming:
+  types: PascalCase
+  protocols: PascalCase
+  functions: camelCase
+  properties: camelCase
+  constants: camelCase
+  file_extension: ".swift"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Validation
+# ─────────────────────────────────────────────
+
+validation:
+  errors:
+    - All signatures must be valid Swift syntax
+    - Enum cases must be exhaustive
+    - Protocol conformances must be declared
+  warnings:
+    - Prefer struct over class for value semantics
+    - Prefer let over var where possible
