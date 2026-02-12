@@ -20,6 +20,11 @@ structure:
     react: framework/react.schema.yaml
     vue: framework/vue.schema.yaml
     lit: framework/lit.schema.yaml
+  workflow:
+    review: workflow/review.schema.yaml
+    status: workflow/status.schema.yaml
+    parity: workflow/parity.schema.yaml
+    decision: workflow/decision.schema.yaml
 
 rules:
   - "Each spec.yaml declares its schema via $schema field"

@@ -24,7 +24,7 @@ woosgem-mda is a spec-driven multi-framework design system using Manifest-Driven
 manifest.yaml                 — AI entry point (project map)
 schemas/                      — Composable schema system
   base/                       — Layer 0: functional specs (WHAT it does)
-    component.schema.yaml     — 25 component specs
+    component.schema.yaml     — 25 component specs (merged Layer 0+1 for web)
     token.schema.yaml         — design token specs
     protocol.schema.yaml      — protocol specs (CSP)
     function.schema.yaml      — utility function specs
@@ -125,8 +125,8 @@ Each component has layered spec files:
 
 - No component exists without a spec.yaml
 - Every spec.yaml must have a `$schema` declaration
-- Layer 0 spec uses platform-neutral terms: properties (not props/attributes), slots (not content), behaviors (not events/interactions)
-- Platform-specific terms live in Layer 1/2 specs only
+- Layer 0 spec uses web-standard terms: attributes, content, interactions, semantics, accessibility, visual_mapping
+- spec.yaml = Layer 0 + Layer 1 merged for web (per "Accept the Merge" decision)
 - Dependency direction: atom ← molecule ← organism (reverse forbidden)
 - Cross-domain access only through contracts
 - Shared code must be used by 2+ domains

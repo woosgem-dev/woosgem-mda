@@ -1,0 +1,114 @@
+# schemas/workflow/parity.schema.yaml
+# Workflow artifact: cross-framework DOM parity comparison report.
+# Produced by the parity runner script after all frameworks pass QA individually.
+# Source: docs/plans/2026-02-12-spec-driven-dev-workflow-design.md Section 2 Phase 5, Section 6
+# Applies to: domains/*/*/.reviews/rNN-p5-parity-report.yaml
+
+schema:
+  version: 1.0.0
+  layer: workflow
+  description: Cross-framework parity check — ensures all frameworks produce equivalent DOM output
+  applies_to: domains/*/*/.reviews/*-p5-parity-report.yaml
+
+# ─────────────────────────────────────────────
+# SECTION 1: Report Identity
+# ─────────────────────────────────────────────
+
+identity:
+  fields:
+    component: { type: string, required: true, format: PascalCase, description: "Component name" }
+    phase: { type: enum, required: true, values: [parity], description: "Always 'parity'" }
+    round: { type: number, required: true, description: "Which iteration round" }
+    frameworks_compared:
+      type: "string[]"
+      required: true
+      description: "Frameworks included in comparison (e.g., [react, vue, lit])"
+
+# ─────────────────────────────────────────────
+# SECTION 2: Test Summary
+# ─────────────────────────────────────────────
+
+summary:
+  fields:
+    test_count: { type: number, required: true, description: "Total parity test cases" }
+    pass: { type: number, required: true, description: "Passing test cases" }
+    fail: { type: number, required: true, description: "Failing test cases" }
+
+# ─────────────────────────────────────────────
+# SECTION 3: DOM Equivalence
+# ─────────────────────────────────────────────
+
+dom_equivalence:
+  description: "Structural DOM comparison results after normalization"
+  fields:
+    result: { type: enum, required: true, values: [pass, fail] }
+    comparison_points:
+      type: "string[]"
+      required: true
+      description: "What was compared: tag, attributes, data-*, aria-*, role, tabindex"
+    details: { type: string, required: false, description: "Structural differences when result is fail" }
+
+# ─────────────────────────────────────────────
+# SECTION 4: Behavioral Equivalence
+# ─────────────────────────────────────────────
+
+behavioral_equivalence:
+  description: "Interaction and state transition comparison"
+  fields:
+    result: { type: enum, required: true, values: [pass, fail] }
+    details: { type: string, required: false, description: "Behavioral differences when result is fail" }
+
+# ─────────────────────────────────────────────
+# SECTION 5: Normalization Rules
+# ─────────────────────────────────────────────
+
+normalization_rules:
+  description: "Framework-specific artifacts stripped before comparison"
+  fields:
+    applied:
+      type: array
+      required: true
+      description: "Normalization rules applied per framework"
+      item:
+        fields:
+          framework: { type: string, required: true, description: "Framework name" }
+          artifacts_stripped:
+            type: "string[]"
+            required: true
+            description: "React: data-reactroot, comments; Vue: scoped hashes, comments; Lit: lit markers"
+    shadow_dom_handling:
+      type: string
+      required: false
+      description: "For Lit: composed (flattened) DOM tree used instead of light/shadow split"
+
+# ─────────────────────────────────────────────
+# SECTION 6: Violations
+# ─────────────────────────────────────────────
+
+violations:
+  type: array
+  required: false
+  description: "Parity differences that need resolution"
+  item:
+    fields:
+      test: { type: string, required: true, description: "Failing parity test case name" }
+      severity: { type: enum, required: true, values: [critical, high, medium, low] }
+      target:
+        type: enum
+        required: true
+        values: [spec, code]
+        description: "spec — undefined aspect causing divergence; code — implementation error"
+      framework_outputs:
+        type: map
+        required: true
+        description: "Per-framework observed output (key: framework, value: output)"
+
+# ─────────────────────────────────────────────
+# SECTION 7: Rendering Strategy
+# ─────────────────────────────────────────────
+
+rendering:
+  description: "How components were rendered for comparison"
+  fields:
+    engine: { type: string, required: true, description: "Rendering engine (e.g., playwright)" }
+    reason: { type: string, required: false, description: "Why this engine was chosen" }

@@ -1,14 +1,19 @@
 # schemas/component.schema.yaml
-# Layer 0: Platform-agnostic component spec.
-# Defines WHAT a component IS — not how it renders on any specific platform.
-# Platform-specific mapping lives in Layer 1 specs (spec.web.yaml, spec.ios.yaml, spec.compose.yaml).
+# Component spec schema — merged Layer 0 + Layer 1 for web.
+# Defines WHAT a component IS and how it maps to the web platform.
+# Aligned with actual spec.yaml vocabulary (2.0.0 alignment update).
 # Applies to: specs/*/*/spec.yaml
 
 schema:
   version: 2.0.0
   layer: 0
-  description: Platform-agnostic component definition — the semantic source of truth
+  description: Component definition — merged semantic source + web platform mapping
   applies_to: specs/*/*/spec.yaml
+  note: >
+    Schema terminology aligned with actual spec files.
+    Specs use web-standard terms (attributes, content, interactions, semantics,
+    accessibility, visual_mapping) reflecting the "Accept the Merge" decision
+    where spec.yaml = Layer 0 + Layer 1 merged for web components.
 
 # ─────────────────────────────────────────────
 # SECTION 1: Required Top-Level Sections
@@ -36,25 +41,33 @@ sections:
         description: "Platforms this component supports. Omit to support all."
       version: { type: string, required: false, format: semver }
 
-  properties:
+  semantics:
     required: true
-    description: "Component configuration. Empty {} is valid for components with no configurable properties."
+    description: "HTML semantics — tag and ARIA role for the root element"
 
-  slots:
+  attributes:
     required: true
-    description: "Content areas. Empty {} is valid for components with no content."
+    description: "Component configuration attributes. Empty {} is valid for components with no configurable attributes."
+
+  content:
+    required: true
+    description: "Content areas (slots). Empty {} is valid for components with no content."
 
   states:
     required: true
     description: "Component states. Empty {} is valid for stateless components."
 
-  behaviors:
+  interactions:
     required: true
-    description: "Semantic interactions. Empty {} is valid for non-interactive components."
+    description: "User interactions and their effects. Empty {} is valid for non-interactive components."
 
-  semantics:
+  accessibility:
     required: true
-    description: "Abstract accessibility semantics (platform specs map these to ARIA/VoiceOver/TalkBack)"
+    description: "ARIA attributes, keyboard mappings, and focus behavior"
+
+  visual_mapping:
+    required: true
+    description: "CSS class name and data-attribute mapping strategy for styling hooks"
 
   # Optional sections
   composition:
@@ -70,7 +83,7 @@ sections:
 # ─────────────────────────────────────────────
 
 type_algebra:
-  description: "Closed set of allowed types for properties"
+  description: "Closed set of allowed types for attributes"
 
   primitives:
     boolean:
@@ -121,10 +134,10 @@ type_algebra:
     description: "Use YAML null (~) for absent defaults. Never use the string 'undefined'."
 
 # ─────────────────────────────────────────────
-# SECTION 3: Property Definition
+# SECTION 3: Attribute Definition
 # ─────────────────────────────────────────────
 
-property_definition:
+attribute_definition:
   fields:
     type: { required: true, values: [enum, boolean, string, number, union] }
     values: { required: "when type=enum" }
@@ -135,10 +148,10 @@ property_definition:
     max: { required: false, applicable: "type=number" }
 
 # ─────────────────────────────────────────────
-# SECTION 4: Slot Definition
+# SECTION 4: Content Definition (Slots)
 # ─────────────────────────────────────────────
 
-slot_definition:
+content_definition:
   fields:
     description: { required: true, language: english }
     required: { required: true, type: boolean }
@@ -163,37 +176,36 @@ slot_definition:
 
 state_definition:
   fields:
-    description: { required: true, type: string, language: english }
+    description: { required: false, type: string, language: english }
+    visual: { required: true, type: string, language: english }
     behavior: { required: true, type: string, language: english }
+    aria:
+      required: false
+      type: map
+      description: "ARIA attribute values in this state"
 
 # ─────────────────────────────────────────────
-# SECTION 6: Behavior Definition (Semantic Interactions)
+# SECTION 6: Interaction Definition
 # ─────────────────────────────────────────────
 
-behavior_definition:
+interaction_definition:
   description: |
-    Platform-agnostic interaction definitions using semantic trigger names.
-    Platform specs map these to concrete events (click/tap/Enter/accessibilityActivate).
+    User interaction definitions using web event trigger names.
+    Each interaction maps triggers to an effect with optional conditions.
 
   fields:
     triggers:
       required: true
       type: "string[]"
-      description: "Semantic trigger names — platform specs map these to native events"
-      allowed_values:
-        - primary-action       # click, tap, Enter, Space, accessibilityActivate
-        - secondary-action     # right-click, long-press, context menu
-        - hover-start          # mouseenter, pointer hover (no mobile equivalent)
-        - hover-end            # mouseleave
-        - focus-in             # focus, VoiceOver focus
-        - focus-out            # blur, VoiceOver move away
-        - dismiss              # Escape, swipe down, tap outside
-        - value-change         # input change, slider move, toggle
-        - submit               # form submit, Enter in input
-        - scroll               # scroll event
-        - drag-start           # drag begin
-        - drag-end             # drag end
-        - long-press           # long press / force touch
+      description: "Event trigger names — click, keyboard keys, or custom trigger names"
+      common_values:
+        - click              # mouse click or tap
+        - Enter              # Enter key press
+        - Space              # Space key press
+        - Escape             # Escape key press
+        - Tab                # Tab key press
+        - overlay-click      # click on overlay/backdrop area
+        - close-button-click # click on close button
     condition:
       required: false
       type: structured
@@ -205,16 +217,16 @@ behavior_definition:
       example:
         condition:
           all:
-            - { prop: loading, eq: false }
-            - { prop: disabled, eq: false }
+            - { attr: loading, eq: false }
+            - { attr: disabled, eq: false }
     effect:
       required: true
       type: enum
       values: [emit, toggle, set]
       description: |
         emit — fires an external callback
-        toggle(field) — toggles an internal boolean property
-        set(field, value) — sets an internal property to a value
+        toggle(field) — toggles an internal boolean attribute
+        set(field, value) — sets an internal attribute to a value
     payload:
       required: "when effect=emit"
       type: map
@@ -222,19 +234,24 @@ behavior_definition:
     description: { required: true, language: english }
 
 # ─────────────────────────────────────────────
-# SECTION 7: Semantics (Abstract Accessibility)
+# SECTION 7: Semantics (HTML Tag + ARIA Role)
 # ─────────────────────────────────────────────
 
 semantics_definition:
   description: |
-    Abstract accessibility semantics. Platform specs map these to concrete APIs:
-    Web → ARIA roles/attributes, iOS → VoiceOver traits, Android → Semantics {}
+    HTML semantics for the root element. Defines the HTML tag and ARIA role.
 
   fields:
+    tag:
+      type: string
+      required: true
+      description: "HTML tag for the root element (e.g., button, div, input, label)"
+      common_values: [button, div, span, input, label, a, nav, ul, li, dialog, section]
     role:
       type: enum
       required: true
       values:
+        - implicit           # role implied by the HTML tag (e.g., button tag = button role)
         - button
         - link
         - checkbox
@@ -249,31 +266,87 @@ semantics_definition:
         - tablist
         - dialog
         - alert
+        - alertdialog
         - progressbar
         - separator
         - img
         - none
-      description: "Abstract role — platform specs map to native equivalents"
-    label:
-      type: string
-      required: false
-      description: "How the component is labeled for assistive technology"
-      source: "Reference to a slot or property that provides the label"
-    live:
-      type: enum
-      required: false
-      values: [polite, assertive, off]
-      description: "Live region announcement behavior"
-    state_announcements:
-      type: map
-      required: false
-      description: "State changes that should be announced"
-      example:
-        loading: "Loading"
-        disabled: "Disabled"
+      description: "ARIA role. Use 'implicit' when the HTML tag already implies the correct role."
 
 # ─────────────────────────────────────────────
-# SECTION 8: Composition (Compound Components)
+# SECTION 8: Accessibility
+# ─────────────────────────────────────────────
+
+accessibility_definition:
+  description: |
+    ARIA attributes, keyboard interaction mappings, focus behavior,
+    and live region announcements.
+
+  fields:
+    aria:
+      required: true
+      type: map
+      description: "ARIA attribute descriptions keyed by attribute name (e.g., busy, disabled, checked, modal, hidden, labelledby)"
+    keyboard:
+      required: true
+      type: map
+      description: "Keyboard key to interaction name mapping (e.g., Enter: activate, Space: toggle, Escape: close)"
+    focus:
+      required: true
+      type: string
+      description: "Focus behavior description — how focus ring appears, focusability rules, focus management on state changes"
+    live_region:
+      required: false
+      type: enum
+      values: [polite, assertive, off]
+      description: "Live region announcement behavior for dynamic content changes"
+
+# ─────────────────────────────────────────────
+# SECTION 9: Visual Mapping (CSS Hooks)
+# ─────────────────────────────────────────────
+
+visual_mapping_definition:
+  description: |
+    CSS class name and data-attribute strategy for styling hooks.
+    Maps component attributes to data-* attributes using defined strategies.
+
+  fields:
+    class:
+      required: true
+      type: string
+      description: "Base CSS class name for the component (e.g., btn, checkbox, modal)"
+    data_attributes:
+      required: true
+      type: map
+      description: "Map of data-attribute names to their mapping strategy"
+      strategy_types:
+        value-mapped:
+          description: "data-attribute value directly mirrors the source attribute value"
+          requires: [source]
+          example:
+            data-variant:
+              strategy: value-mapped
+              source: variant
+        present-when-true:
+          description: "data-attribute is present (no value) when source boolean is true, absent when false"
+          requires: [source]
+          example:
+            data-full-width:
+              strategy: present-when-true
+              source: full-width
+        priority-enum:
+          description: "data-attribute value determined by first matching condition in priority order"
+          requires: [priority, fallback]
+          example:
+            data-state:
+              strategy: priority-enum
+              priority:
+                - { when: { attr: loading, eq: true }, value: loading }
+                - { when: { attr: disabled, eq: true }, value: disabled }
+              fallback: absent
+
+# ─────────────────────────────────────────────
+# SECTION 10: Composition (Compound Components)
 # ─────────────────────────────────────────────
 
 composition_definition:
@@ -291,10 +364,11 @@ composition_definition:
       fields:
         strategy:
           type: enum
-          values: [inline, overlay]
+          values: [inline, overlay, portal]
           description: |
             inline — rendered in document flow
-            overlay — rendered above other content (platform handles how)
+            overlay — rendered above other content
+            portal — rendered at document top-level (body) to escape stacking context
         description: { type: string }
 
     dependencies:
@@ -315,7 +389,7 @@ composition_definition:
             context — shared state via context/environment (React Context, CompositionLocal, @Environment)
             events — child emits events to parent
             props — parent passes state as props/parameters
-        shared_state: { type: "string[]", description: "Properties shared with children" }
+        shared_state: { type: "string[]", description: "Attributes shared with children" }
 
   sub_components:
     description: "Each sub-component is defined inline with its own mini-spec"
@@ -324,11 +398,14 @@ composition_definition:
       description: { type: string, language: english }
       required: { type: boolean }
     optional_fields:
-      properties: "Same schema as top-level properties"
-      slots: "Same schema as top-level slots"
+      tag: "HTML tag for the sub-component"
+      attributes: "Same schema as top-level attributes"
+      content: "Same schema as top-level content"
+      visual_mapping: "Same schema as top-level visual_mapping"
+      accessibility: "Same schema as top-level accessibility"
 
 # ─────────────────────────────────────────────
-# SECTION 9: Control (Form Components)
+# SECTION 11: Control (Form Components)
 # ─────────────────────────────────────────────
 
 control_definition:
@@ -355,7 +432,7 @@ control_definition:
         description: { required: true }
 
 # ─────────────────────────────────────────────
-# SECTION 10: Language & Style Rules
+# SECTION 12: Language & Style Rules
 # ─────────────────────────────────────────────
 
 language_rules:
@@ -368,24 +445,28 @@ language_rules:
   null_convention: "Use YAML null (~) for absent values. Never 'undefined' string."
 
 # ─────────────────────────────────────────────
-# SECTION 11: Validation Checklist
+# SECTION 13: Validation Checklist
 # ─────────────────────────────────────────────
 
 validation_checklist:
   errors:
-    - All required sections present (component, properties, slots, states, behaviors, semantics)
-    - All property types from closed type algebra
-    - All behavior conditions use structured syntax (not natural language)
-    - All behaviors with effect=emit have payload defined
-    - Semantic role is from allowed values list
-    - Behavior triggers use semantic names from allowed_values list
+    - All required sections present (component, semantics, attributes, content, states, interactions, accessibility, visual_mapping)
+    - All attribute types from closed type algebra
+    - All interaction conditions use structured syntax (not natural language)
+    - All interactions with effect=emit have payload defined
+    - Semantic tag is a valid HTML element
+    - Semantic role is from allowed values list (or 'implicit')
+    - Interaction triggers use recognized event names
+    - Accessibility section has aria, keyboard, and focus fields
+    - Visual mapping has class and data_attributes fields
     - Form components have control section
     - Compound components have composition section
     - All text in English
     - No YAML string "undefined" — use null (~)
-    - No platform-specific terms (no HTML tags, CSS classes, ARIA attributes, Modifier chains)
 
   warnings:
     - Components with dependencies should declare them in composition.dependencies
     - Components with size enum should reference shared tokens
-    - State definitions should have corresponding behavior triggers
+    - State definitions should have corresponding interaction triggers
+    - States with aria field should have matching accessibility.aria descriptions
+    - Visual mapping data_attributes should cover all enum-type attributes
