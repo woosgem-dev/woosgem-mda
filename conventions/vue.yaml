@@ -1,0 +1,41 @@
+# conventions/vue.yaml — Vue code generation rules
+
+file_patterns:
+  component: "{ComponentName}.vue"
+  composable: "use-{name}.ts"
+  test: "{ComponentName}.test.ts"
+  story: "{ComponentName}.stories.ts"
+  index: "index.ts"
+
+naming:
+  components: PascalCase
+  composables: camelCase with 'use' prefix
+  files: kebab-case
+  props_type: "{Component}Props"
+  emits_type: "{Component}Emits"
+
+component_pattern:
+  - "Use <script setup lang='ts'> (Composition API only)"
+  - "Define props with defineProps<T>()"
+  - "Define emits with defineEmits<T>()"
+  - "Use defineExpose() for imperative handle"
+  - "Use v-model for two-way binding on form components"
+
+composables:
+  - "Extract reusable logic into composables"
+  - "Prefix all composables with 'use'"
+  - "Use provide/inject for compound component communication"
+
+state:
+  - "Use ref() for primitives, reactive() for objects"
+  - "Use computed() for derived values"
+  - "Use watchEffect() over watch() when possible"
+
+exports:
+  - "Named exports only, no default exports"
+  - "Re-export public API from index.ts"
+
+template:
+  - "Use semantic HTML elements"
+  - "Bind ARIA attributes from spec semantics"
+  - "Use :class binding with array syntax for conditional classes"

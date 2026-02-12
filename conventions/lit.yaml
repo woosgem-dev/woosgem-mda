@@ -1,0 +1,41 @@
+# conventions/lit.yaml — Lit code generation rules
+
+file_patterns:
+  component: "{component-name}.ts"
+  test: "{component-name}.test.ts"
+  story: "{component-name}.stories.ts"
+  index: "index.ts"
+
+naming:
+  tag_prefix: "wg-"
+  tag_format: "wg-{component-name}"
+  class: "Wg{ComponentName}Element"
+  files: kebab-case
+
+component_pattern:
+  - "Extend LitElement"
+  - "Use @customElement('wg-{name}') decorator"
+  - "Use Shadow DOM (default)"
+  - "Define styles with static styles = css`...`"
+  - "Use @property() decorator for reactive properties"
+
+properties:
+  - "Use @property({ type: String }) for string props"
+  - "Use @property({ type: Boolean, reflect: true }) for boolean props"
+  - "Use @property({ type: Number }) for number props"
+  - "Boolean attributes reflect to DOM for CSS styling"
+
+slots:
+  - "Use <slot> for default content"
+  - "Use <slot name='...'> for named slots"
+  - "Map spec slots directly to Shadow DOM slots"
+
+css:
+  - "Use CSS custom properties for theming"
+  - "Expose ::part() for external styling"
+  - "Use :host for component-level styles"
+  - "Use :host([variant='...']) for variant styles"
+
+exports:
+  - "Side-effect import registers the custom element"
+  - "Also export class for type usage"

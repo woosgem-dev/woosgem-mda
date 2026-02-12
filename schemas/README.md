@@ -36,14 +36,14 @@ $schema:
 ### Component specs
 
 ```yaml
-# domains/atoms/button/spec.yaml — what Button IS
+# specs/atoms/button/spec.yaml — what Button IS
 $schema: schemas/base/component.schema.yaml
 
-# domains/atoms/button/spec.web.yaml — web platform mapping
+# specs/atoms/button/spec.web.yaml — web platform mapping
 $schema:
   compose: [schemas/base/component.schema.yaml, schemas/platform/web.schema.yaml]
 
-# domains/atoms/button/spec.react.yaml — React implementation
+# specs/atoms/button/spec.react.yaml — React implementation
 $schema:
   compose:
     - schemas/base/component.schema.yaml
@@ -51,14 +51,14 @@ $schema:
     - schemas/framework/react.schema.yaml
     - schemas/lang/typescript.schema.yaml
 
-# domains/atoms/button/spec.ios.yaml — iOS/SwiftUI implementation
+# specs/atoms/button/spec.ios.yaml — iOS/SwiftUI implementation
 $schema:
   compose:
     - schemas/base/component.schema.yaml
     - schemas/platform/ios.schema.yaml
     - schemas/lang/swift.schema.yaml
 
-# domains/atoms/button/spec.compose.yaml — Android/Compose implementation
+# specs/atoms/button/spec.compose.yaml — Android/Compose implementation
 $schema:
   compose:
     - schemas/base/component.schema.yaml

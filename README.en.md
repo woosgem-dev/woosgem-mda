@@ -27,28 +27,28 @@ spec.yaml (framework-agnostic, web standards)
 woosgem-mda/
   manifest.yaml              ← AI entry point
 
-  domains/
+  specs/
     atoms/                   ← 11 (Button, Icon, Badge, ...)
     molecules/               ← 9  (Input, Select, Checkbox, ...)
     organisms/               ← 5  (Modal, Card, Tab, ...)
 
   shared/                    ← tokens, CSP, utils, types
-  .conventions/              ← Framework-specific code generation rules
-  .scripts/                  ← validate, generate
+  conventions/               ← Framework-specific code generation rules
+  workers/                   ← Agent workspaces
+  decisions/                 ← Architecture decision records
+  config/                    ← Build/publish config
+  scripts/                   ← validate, generate
 ```
 
 Each component directory:
 
 ```
-domains/atoms/button/
+specs/atoms/button/
   spec.yaml              ← Core spec (web standards, framework-agnostic)
+  spec.web.yaml          ← Web platform mapping
   spec.react.yaml        ← React implementation spec
   spec.vue.yaml          ← Vue implementation spec
   spec.lit.yaml          ← Lit implementation spec
-  spec.styles.yaml       ← Style spec
-  spec.tests.yaml        ← Test scenarios
-  contracts/index.ts     ← public API
-  internals/             ← generated code
 ```
 
 ## Components
@@ -83,6 +83,8 @@ TypeScript, SCSS, React 18+, Vue 3.4+, Lit 3, Vite, Vitest, Turborepo
 
 ## Documentation
 
+- [MDA Playbook](docs/playbook.md)
+- [Harness Engineering](docs/harness-engineering.md)
 - [Design Document](docs/plans/2026-02-11-woosgem-mda-design.md)
 
 ## Status

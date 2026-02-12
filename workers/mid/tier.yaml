@@ -1,0 +1,8 @@
+# workers/mid/tier.yaml — Spec Author tier
+
+tier: mid
+permissions:
+  schemas: [read]
+  conventions: [read]
+  decisions: [read]
+  specs: [read, write]

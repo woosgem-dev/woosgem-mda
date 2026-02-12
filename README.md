@@ -27,28 +27,28 @@ spec.yaml (프레임워크 무관, 웹표준)
 woosgem-mda/
   manifest.yaml              ← AI 진입점
 
-  domains/
+  specs/
     atoms/                   ← 11개 (Button, Icon, Badge, ...)
     molecules/               ← 9개  (Input, Select, Checkbox, ...)
     organisms/               ← 5개  (Modal, Card, Tab, ...)
 
   shared/                    ← tokens, CSP, utils, types
-  .conventions/              ← 프레임워크별 코드 생성 규칙
-  .scripts/                  ← validate, generate
+  conventions/               ← 프레임워크별 코드 생성 규칙
+  workers/                   ← 에이전트 워크스페이스
+  decisions/                 ← 아키텍처 결정 기록
+  config/                    ← 빌드/배포 설정
+  scripts/                   ← validate, generate
 ```
 
 각 컴포넌트 디렉토리:
 
 ```
-domains/atoms/button/
+specs/atoms/button/
   spec.yaml              ← 코어 스펙 (웹표준, 프레임워크 무관)
+  spec.web.yaml          ← 웹 플랫폼 매핑
   spec.react.yaml        ← React 구현 스펙
   spec.vue.yaml          ← Vue 구현 스펙
   spec.lit.yaml          ← Lit 구현 스펙
-  spec.styles.yaml       ← 스타일 스펙
-  spec.tests.yaml        ← 테스트 시나리오
-  contracts/index.ts     ← public API
-  internals/             ← 생성된 코드
 ```
 
 ## 컴포넌트
@@ -83,6 +83,8 @@ TypeScript, SCSS, React 18+, Vue 3.4+, Lit 3, Vite, Vitest, Turborepo
 
 ## 문서
 
+- [MDA Playbook](docs/playbook.md)
+- [Harness Engineering](docs/harness-engineering.md)
 - [설계 문서](docs/plans/2026-02-11-woosgem-mda-design.md)
 
 ## Status

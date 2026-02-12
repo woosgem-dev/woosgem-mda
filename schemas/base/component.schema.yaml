@@ -2,13 +2,13 @@
 # Layer 0: Platform-agnostic component spec.
 # Defines WHAT a component IS — not how it renders on any specific platform.
 # Platform-specific mapping lives in Layer 1 specs (spec.web.yaml, spec.ios.yaml, spec.compose.yaml).
-# Applies to: domains/*/*/spec.yaml
+# Applies to: specs/*/*/spec.yaml
 
 schema:
   version: 2.0.0
   layer: 0
   description: Platform-agnostic component definition — the semantic source of truth
-  applies_to: domains/*/*/spec.yaml
+  applies_to: specs/*/*/spec.yaml
 
 # ─────────────────────────────────────────────
 # SECTION 1: Required Top-Level Sections

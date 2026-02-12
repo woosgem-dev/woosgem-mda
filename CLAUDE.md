@@ -16,7 +16,7 @@ woosgem-mda is a spec-driven multi-framework design system using Manifest-Driven
   - All code comments
   - All commit messages
   - All documentation under docs/
-  - All decision records (.decisions/)
+  - All decision records (decisions/)
 
 ## Architecture
 
@@ -42,7 +42,7 @@ schemas/                      — Composable schema system
     react.schema.yaml         — JSX, hooks, forwardRef, Context
     vue.schema.yaml           — SFC, Composition API, v-model, provide/inject
     lit.schema.yaml           — Custom elements, Shadow DOM, CSS parts
-domains/
+specs/
   atoms/                      — 11 atomic components
   molecules/                  — 9 molecule components
   organisms/                  — 5 organism components
@@ -51,7 +51,10 @@ shared/                       — Cross-domain modules
   csp/spec.yaml               — Color Set Protocol (81 tokens from minimal input)
   utils/spec.yaml             — Pure utility functions (classNames, mergeProps, filterNullish)
   types/spec.yaml             — Shared type definitions (ComponentDefinition, token key unions)
-.conventions/                 — Code generation rules per framework
+conventions/                  — Code generation rules per framework
+workers/                      — Agent workspaces (senior/mid/junior)
+decisions/                    — Architecture decision records
+config/                       — Build and validation config
 ```
 
 ## Spec + Schema System
@@ -102,7 +105,7 @@ $schema:
 
 - **Platform-neutral**: Token values are unitless numbers. Units attached at build time per platform.
 - **DTCG-compatible**: Token scales use `$type` annotations (dimension, duration, cubicBezier, etc.)
-- **Multi-platform output**: Each token scale has `output_patterns` for css, scss, android, ios, compose
+- **Multi-platform output**: Each token scale has `output_patterns` as an open map (keys are platform identifiers)
 - **Structured DSL**: CSP transformations use `{ fn: name, args: [...] }` — no string formulas
 - **Token derivation forms**: `{ input }`, `{ transform, source }`, `{ source }`, `{ default: { light, dark } }`
 
@@ -128,4 +131,4 @@ Each component has layered spec files:
 - Cross-domain access only through contracts
 - Shared code must be used by 2+ domains
 - All shared functions must be pure (no side effects)
-- Token changes affect all domains — require .decisions/ record
+- Token changes affect all domains — require decisions/ record

@@ -1,0 +1,13 @@
+# workers/manifest.yaml — Agent workspace routing
+
+structure:
+  senior: senior/
+  mid: mid/
+  junior: junior/
+
+rules:
+  - "Only higher tiers can assign tasks to lower tiers"
+  - "Senior: schema/convention/ADR changes, review approval"
+  - "Mid: spec creation/modification"
+  - "Junior: code generation"
+  - "No authority escalation between tiers"

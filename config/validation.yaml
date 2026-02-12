@@ -1,0 +1,13 @@
+# config/validation.yaml — Manifest & spec validation rules
+
+script: scripts/validate-manifest.ts
+
+checks:
+  - "Spec file existence for every declared component"
+  - "Required fields completeness per schema"
+  - "Spec-to-code synchronization"
+  - "Contract export matching"
+  - "Dependency direction: atom <- molecule <- organism"
+  - "No cross-domain internal imports"
+  - "Shared module usage frequency (2+ domains)"
+  - "Undeclared file detection"

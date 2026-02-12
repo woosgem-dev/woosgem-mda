@@ -1,0 +1,16 @@
+# specs/molecules/manifest.yaml — Molecule components
+
+structure:
+  input: input/spec.yaml
+  textarea: textarea/spec.yaml
+  select: select/spec.yaml
+  checkbox: checkbox/spec.yaml
+  radio: radio/spec.yaml
+  switch: switch/spec.yaml
+  alert: alert/spec.yaml
+  tooltip: tooltip/spec.yaml
+  list-item: list-item/spec.yaml
+
+rules:
+  - "Molecules depend only on atoms"
+  - "Each molecule performs a single function"

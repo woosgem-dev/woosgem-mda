@@ -1,0 +1,27 @@
+# schemas/manifest.yaml — Composable schema system
+
+structure:
+  base:
+    component: base/component.schema.yaml
+    token: base/token.schema.yaml
+    protocol: base/protocol.schema.yaml
+    function: base/function.schema.yaml
+    type: base/type.schema.yaml
+  lang:
+    typescript: lang/typescript.schema.yaml
+    kotlin: lang/kotlin.schema.yaml
+    swift: lang/swift.schema.yaml
+  platform:
+    web: platform/web.schema.yaml
+    ios: platform/ios.schema.yaml
+    compose: platform/compose.schema.yaml
+    react-native: platform/rn.schema.yaml
+  framework:
+    react: framework/react.schema.yaml
+    vue: framework/vue.schema.yaml
+    lit: framework/lit.schema.yaml
+
+rules:
+  - "Each spec.yaml declares its schema via $schema field"
+  - "Composable via $schema.compose: [...]"
+  - "Composition formula: spec = base + lang [+ platform] [+ framework]"

@@ -1,0 +1,41 @@
+# conventions/naming.yaml — Naming patterns across all targets
+
+directories:
+  format: kebab-case
+  examples: [button, icon-button, segmented-control]
+
+files:
+  spec: "spec.yaml"
+  spec_platform: "spec.{platform}.yaml"
+  spec_framework: "spec.{framework}.yaml"
+  component_react: "{ComponentName}.tsx"
+  component_vue: "{ComponentName}.vue"
+  component_lit: "{component-name}.ts"
+  style: "_{component-name}.scss"
+  test: "{ComponentName}.test.{ext}"
+  index: "index.ts"
+
+components:
+  react: PascalCase
+  vue: PascalCase
+  lit: "wg-{kebab-case}"
+
+types:
+  props: "{Component}Props"
+  emits: "{Component}Emits"
+  ref: "{Component}Ref"
+  variant: "{Component}Variant"
+  size: "{Component}Size"
+  color: "{Component}Color"
+
+css:
+  prefix: "wg-"
+  block: "wg-{component}"
+  element: "wg-{component}__{element}"
+  modifier: "wg-{component}--{modifier}"
+  custom_property: "--wg-{scope}-{name}"
+
+tokens:
+  css_variable: "--wg-{scale}-{key}"
+  scss_variable: "${scale}-{key}"
+  typescript_key: "{Scale}Key"

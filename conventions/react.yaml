@@ -1,0 +1,42 @@
+# conventions/react.yaml — React code generation rules
+
+file_patterns:
+  component: "{ComponentName}.tsx"
+  hook: "use-{name}.ts"
+  test: "{ComponentName}.test.tsx"
+  story: "{ComponentName}.stories.tsx"
+  index: "index.ts"
+
+naming:
+  components: PascalCase
+  hooks: camelCase with 'use' prefix
+  files: kebab-case
+  props_interface: "{Component}Props"
+  ref_type: "{Component}Ref"
+
+component_pattern:
+  - "Use forwardRef for all components"
+  - "Props interface extends platform-mapped HTML attributes"
+  - "Destructure props with defaults in function signature"
+  - "Use data-* attributes for CSS styling hooks"
+
+hooks:
+  - "Extract reusable logic into custom hooks"
+  - "Prefix all hooks with 'use'"
+  - "Return tuple [state, actions] or object"
+
+state:
+  - "Controlled + uncontrolled pattern for form components"
+  - "Use useCallback for event handlers passed as props"
+  - "Use useMemo only when profiling shows benefit"
+
+exports:
+  - "Named exports only, no default exports"
+  - "Re-export public API from index.ts"
+  - "Export props interface alongside component"
+
+accessibility:
+  - "Map spec semantics.role to ARIA role"
+  - "Map spec semantics.label to aria-label or aria-labelledby"
+  - "Map spec semantics.live to aria-live"
+  - "All interactive elements must be keyboard accessible"

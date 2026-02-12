@@ -1,93 +1,25 @@
+# manifest.yaml — Project entry point
+
 project:
   name: woosgem
   description: Multi-framework Design System — Spec-driven
-  version: 0.1.0
-  phase: 1
 
-stack:
-  languages: [typescript, scss]
-  frameworks: [react-18, vue-3, lit-3]
-  bundler: vite
-  test: vitest
-  build_orchestrator: turborepo
+config:
+  schemas: schemas/
+  conventions: conventions/
+  decisions: decisions/
 
-schemas:
-  path: schemas/
-  convention: "Each spec.yaml declares its schema via $schema field. Composable via $schema.compose: [...]"
-  composition_formula: "spec = base + lang [+ platform] [+ framework]"
-  base:
-    component: schemas/base/component.schema.yaml
-    token: schemas/base/token.schema.yaml
-    protocol: schemas/base/protocol.schema.yaml
-    function: schemas/base/function.schema.yaml
-    type: schemas/base/type.schema.yaml
-  lang:
-    typescript: schemas/lang/typescript.schema.yaml
-    kotlin: schemas/lang/kotlin.schema.yaml
-    swift: schemas/lang/swift.schema.yaml
-  platform:
-    web: schemas/platform/web.schema.yaml
-    ios: schemas/platform/ios.schema.yaml
-    compose: schemas/platform/compose.schema.yaml
-    react-native: schemas/platform/rn.schema.yaml
-  framework:
-    react: schemas/framework/react.schema.yaml
-    vue: schemas/framework/vue.schema.yaml
-    lit: schemas/framework/lit.schema.yaml
+workers: workers/
 
 domains:
-  atoms:
-    purpose: 최소 단위 UI 요소 — 단독으로 의미를 가지는 기본 블록
-    status: active
-    depends_on: []
-    manifest: domains/atoms/manifest.yaml
-    component_count: 11
-  molecules:
-    purpose: Atom 조합으로 단일 기능을 수행하는 요소
-    status: active
-    depends_on: [atoms]
-    manifest: domains/molecules/manifest.yaml
-    component_count: 9
-  organisms:
-    purpose: 복합 구조, 서브컴포넌트를 포함하는 고수준 요소
-    status: active
-    depends_on: [atoms, molecules]
-    manifest: domains/organisms/manifest.yaml
-    component_count: 5
-
-shared:
-  path: shared/
-  manifest: shared/manifest.yaml
-  modules:
-    tokens: 디자인 토큰 (spacing, typography, color primitives)
-    csp: Color Set Protocol — 최소 입력으로 81개 토큰 생성
-    utils: 공유 유틸리티 (2+ 도메인 사용)
-    types: 공통 타입 정의
-
-publish:
-  strategy: framework-based
-  packages:
-    "@woosgem-dev/core": 프레임워크 무관 정의 + 타입
-    "@woosgem-dev/react": React 래퍼 전체
-    "@woosgem-dev/vue": Vue 래퍼 전체
-    "@woosgem-dev/lit": Lit 웹컴포넌트 전체
-    "@woosgem-dev/styles": SCSS/CSS 번들
-
-validation:
-  script: .scripts/validate-manifest.ts
-  checks:
-    - spec 존재 여부
-    - spec 필수 필드 완전성
-    - spec ↔ code 동기화
-    - contracts export 매칭
-    - 의존성 방향 (atom ← molecule ← organism)
-    - 도메인 간 internals 직접 import 금지
-    - shared 사용 빈도 (2+ 도메인)
-    - 미선언 파일 탐지
+  shared: shared/
+  atoms: specs/atoms/
+  molecules: specs/molecules/
+  organisms: specs/organisms/
 
 rules:
-  - spec.yaml 없는 컴포넌트는 존재할 수 없음
-  - 도메인 간 통신은 contracts만 허용
-  - organism → atom 직접 의존 가능
-  - 의존성 역방향 금지 (atom이 molecule 참조 불가)
-  - shared에는 2+ 도메인이 쓰는 코드만
+  - "No component exists without a spec.yaml"
+  - "Cross-domain communication only through contracts"
+  - "organism -> atom direct dependency allowed"
+  - "Reverse dependency forbidden (atom must not reference molecule)"
+  - "Shared code must be used by 2+ domains"

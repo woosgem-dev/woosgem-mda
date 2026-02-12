@@ -1,0 +1,8 @@
+# workers/senior/tier.yaml — Architect tier
+
+tier: senior
+permissions:
+  schemas: [read, write]
+  conventions: [read, write]
+  decisions: [read, write]
+  specs: [read, write]

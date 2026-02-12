@@ -1,0 +1,18 @@
+# specs/atoms/manifest.yaml — Atomic components
+
+structure:
+  button: button/spec.yaml
+  icon-button: icon-button/spec.yaml
+  icon: icon/spec.yaml
+  badge: badge/spec.yaml
+  avatar: avatar/spec.yaml
+  spinner: spinner/spec.yaml
+  skeleton: skeleton/spec.yaml
+  kbd: kbd/spec.yaml
+  divider: divider/spec.yaml
+  overlay: overlay/spec.yaml
+  progress: progress/spec.yaml
+
+rules:
+  - "Atoms have no domain dependencies"
+  - "Each atom must be independently usable"

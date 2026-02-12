@@ -1,0 +1,15 @@
+# config/publish.yaml — Package distribution config
+
+strategy: framework-based
+
+packages:
+  "@woosgem-dev/core":
+    description: Framework-agnostic definitions + types
+  "@woosgem-dev/react":
+    description: React component wrappers
+  "@woosgem-dev/vue":
+    description: Vue component wrappers
+  "@woosgem-dev/lit":
+    description: Lit web components
+  "@woosgem-dev/styles":
+    description: SCSS/CSS bundle

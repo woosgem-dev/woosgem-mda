@@ -1,0 +1,9 @@
+# workers/junior/tier.yaml — Code Generator tier
+
+tier: junior
+permissions:
+  schemas: [read]
+  conventions: [read]
+  decisions: [read]
+  specs: [read]
+  generated: [write]

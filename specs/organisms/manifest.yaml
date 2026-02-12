@@ -1,0 +1,12 @@
+# specs/organisms/manifest.yaml — Organism components
+
+structure:
+  modal: modal/spec.yaml
+  card: card/spec.yaml
+  tab: tab/spec.yaml
+  segmented-control: segmented-control/spec.yaml
+  toast: toast/spec.yaml
+
+rules:
+  - "Organisms may depend on atoms and molecules"
+  - "Sub-components are declared in the parent spec, not as separate structure entries"

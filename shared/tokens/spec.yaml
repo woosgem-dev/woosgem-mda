@@ -433,6 +433,6 @@ rules:
   - All token values are immutable constants
   - Token values are unitless numbers (platform attaches units)
   - Non-color tokens are mode-invariant (light/dark same)
-  - Token changes affect all domains — require .decisions/ record
+  - Token changes affect all domains — require decisions/ record
   - No framework-specific or platform-specific logic in token definitions
   - Spacing keys are intentionally non-contiguous (density curve)

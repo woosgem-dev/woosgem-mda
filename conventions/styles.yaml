@@ -1,0 +1,34 @@
+# conventions/styles.yaml — SCSS/CSS code generation rules
+
+file_patterns:
+  component: "_{component-name}.scss"
+  tokens: "_tokens.scss"
+  mixins: "_mixins.scss"
+  index: "index.scss"
+
+naming:
+  class_prefix: "wg-"
+  class_format: "wg-{component-name}"
+  modifier_format: "wg-{component}--{modifier}"
+  element_format: "wg-{component}__{element}"
+  convention: BEM with wg- prefix
+
+tokens:
+  - "Reference design tokens via SCSS variables ($spacing-4, $radius-md)"
+  - "Never use raw values — always reference token variables"
+  - "Color tokens come from CSP-generated CSS custom properties"
+
+structure:
+  - "One SCSS partial per component"
+  - "Component styles scoped with .wg-{name} root class"
+  - "Variant styles use modifier classes"
+  - "State styles use data-attributes (data-disabled, data-loading)"
+  - "Interactive states use :hover, :focus-visible, :active pseudo-classes"
+
+responsive:
+  - "Use breakpoint mixins, not raw media queries"
+  - "Mobile-first approach (min-width)"
+
+motion:
+  - "Reference motion tokens for transitions"
+  - "Respect prefers-reduced-motion"

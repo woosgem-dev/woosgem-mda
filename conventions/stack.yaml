@@ -1,0 +1,19 @@
+# conventions/stack.yaml — Technology stack declaration
+
+languages:
+  - typescript
+  - scss
+
+frameworks:
+  react: "18+"
+  vue: "3.4+"
+  lit: "3"
+
+bundler: vite
+test: vitest
+build_orchestrator: turborepo
+
+package_manager: pnpm
+
+node:
+  minimum: "20"
